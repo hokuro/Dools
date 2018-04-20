@@ -60,6 +60,7 @@ public class EntityDoolPlayer extends EntityMob {
 		isRightSleeve = nbttagcompound.getBoolean("WareRightSleev");
 		isCape  = nbttagcompound.getBoolean("WareCape");
 		isSpectator = nbttagcompound.getBoolean("Spector");
+		setURLSkin();
 	}
 
 	@Override
@@ -81,9 +82,10 @@ public class EntityDoolPlayer extends EntityMob {
 		nbttagcompound.setBoolean("Spector",isSpectator);
 	}
 
-	public void setURLSkin() {
+	public ResourceLocation setURLSkin() {
 		// URLスキンを有効にする
-		if (!(Minecraft.getMinecraft() != null)) return;
+		if (!(Minecraft.getMinecraft() != null))
+			return DefaultPlayerSkin.getDefaultSkin(UUIDS[skinSlim]);
 		if (skinUser != null && !skinUser.isEmpty()) {
 			fskinResorce = Dools.proxy.func_110311_f(skinUser);
 			fskinDownload = Dools.proxy.getDownloadImageSkin(this.fskinResorce, skinUser, skinSlim);
@@ -91,6 +93,7 @@ public class EntityDoolPlayer extends EntityMob {
 			UUID playerUUID;
 			fskinResorce = DefaultPlayerSkin.getDefaultSkin(UUIDS[skinSlim]);
 		}
+		return fskinResorce;
 	}
 
 	public ThreadDownloadImageData func_110309_l() {
@@ -98,7 +101,7 @@ public class EntityDoolPlayer extends EntityMob {
 	}
 
 	public ResourceLocation getLocationSkin(){
-		return this.fskinResorce;
+		return setURLSkin();
 	}
 
 	public boolean isSlim(){

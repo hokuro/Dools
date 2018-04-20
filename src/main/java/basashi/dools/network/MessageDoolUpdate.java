@@ -1,7 +1,6 @@
 package basashi.dools.network;
 
 import basashi.dools.core.Dools;
-import basashi.dools.core.log.ModLog;
 import basashi.dools.entity.EntityDool;
 import basashi.dools.server.ServerDool;
 import io.netty.buffer.ByteBuf;
@@ -36,7 +35,7 @@ public class MessageDoolUpdate implements IMessageHandler<MessageDoolUpdate, IMe
 	@Override
 	public IMessage onMessage(MessageDoolUpdate message, MessageContext ctx) {
 		try{
-			WorldServer lworld = (WorldServer) ctx.getServerHandler().playerEntity.worldObj;
+			WorldServer lworld = (WorldServer) ctx.getServerHandler().player.world;
 			Entity lentity = null;
 			EntityDool ldool = null;
 			ServerDool lserver = null;
@@ -49,7 +48,7 @@ public class MessageDoolUpdate implements IMessageHandler<MessageDoolUpdate, IMe
 			}
 
 			// クライアントから姿勢制御データ要求を受信
-			ModLog.log().debug("RequestFromClient("+ldool.getEntityId()+":"+lserver.getClass().getSimpleName()+").");
+			//ModLog.log().debug("RequestFromClient("+ldool.getEntityId()+":"+lserver.getClass().getSimpleName()+").");
 			Dools.INSTANCE.sendToAll(new MessagePause_Client(lserver.getData(ldool)));
 			lserver.sendItems(ldool, false);
 		}catch(Exception e){

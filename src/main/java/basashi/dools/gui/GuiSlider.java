@@ -37,7 +37,7 @@ public class GuiSlider extends GuiButton {
 			return;
 		}
 		if (dragging) {
-			sliderValue = (float) (i - (xPosition + 4)) / (float) (width - 8);
+			sliderValue = (float) (i - (x + 4)) / (float) (width - 8);
 			if (sliderValue < 0.0F) {
 				sliderValue = 0.0F;
 			}
@@ -47,15 +47,15 @@ public class GuiSlider extends GuiButton {
 			setDisplayString();
 		}
 		GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
-		drawTexturedModalRect(xPosition + (int) (sliderValue * (float) (width - 8)),
-				yPosition, 0, 66, 4, 20);
-		drawTexturedModalRect(xPosition + (int) (sliderValue * (float) (width - 8)) + 4,
-				yPosition, 196, 66, 4, 20);
+		drawTexturedModalRect(x + (int) (sliderValue * (float) (width - 8)),
+				y, 0, 66, 4, 20);
+		drawTexturedModalRect(x + (int) (sliderValue * (float) (width - 8)) + 4,
+				y, 196, 66, 4, 20);
 	}
 
 	public boolean mousePressed(Minecraft minecraft, int i, int j) {
 		if (super.mousePressed(minecraft, i, j)) {
-			sliderValue = (float) (i - (xPosition + 4)) / (float) (width - 8);
+			sliderValue = (float) (i - (x + 4)) / (float) (width - 8);
 			if (sliderValue < 0.0F) {
 				sliderValue = 0.0F;
 			}

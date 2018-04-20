@@ -39,7 +39,7 @@ public class MessagePause implements IMessage, IMessageHandler<MessagePause, IMe
 	@Override
 	public IMessage onMessage(MessagePause message, MessageContext ctx) {
 		try{
-			WorldServer lworld = (WorldServer) ctx.getServerHandler().playerEntity.worldObj;
+			WorldServer lworld = (WorldServer) ctx.getServerHandler().player.world;
 			Entity lentity = null;
 			EntityDool ldool = null;
 			ServerDool lserver = null;

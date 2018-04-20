@@ -95,7 +95,10 @@ public class ItemDool extends Item {
 			if (itemstack.hasTagCompound() && itemstack.getTagCompound().hasKey("DoolName")) {
 				ls = itemstack.getTagCompound().getString("DoolName");
 			} else {
-				ls = EntityList.classToStringMapping.get(EntityList.getClassFromID(itemstack.getItemDamage()));
+				Class cl = EntityList.getClassFromID(itemstack.getItemDamage();
+				if (cl != null){
+					ls = EntityList.classToStringMapping.get(cl);
+				}
 				//ls = EntityList.getStringFromID(itemstack.getItemDamage());
 			}
 			if (ls != null) {
@@ -136,8 +139,8 @@ public class ItemDool extends Item {
 	 */
 	public static EntityLivingBase getEntityFromItemStack(ItemStack pItemStack) {
 		Dools.proxy.initEntitys();
+
 		String ls = EntityList.classToStringMapping.get(EntityList.getClassFromID(pItemStack.getItemDamage()));
-		//String ls = EntityList.getStringFromID(pItemStack.getItemDamage());
 		if (ls == null || !entityStringMap.containsKey(ls)) {
 			if (pItemStack.hasTagCompound()) {
 				if (pItemStack.getTagCompound().hasKey("DoolName")) {

@@ -2,7 +2,7 @@ package basashi.dools.creative;
 
 import basashi.dools.core.Dools;
 import net.minecraft.creativetab.CreativeTabs;
-import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -18,9 +18,9 @@ public class CreativeTabDools extends CreativeTabs {
 	}
 
 	@Override
-	public Item getTabIconItem() {
+	public ItemStack getTabIconItem() {
 		// TODO 自動生成されたメソッド・スタブ
-		return Dools.dool;
+		return new ItemStack(Dools.dool);
 	}
 
 	@SideOnly(Side.CLIENT)

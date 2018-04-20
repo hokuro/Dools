@@ -14,6 +14,7 @@ import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.WorldServer;
@@ -66,7 +67,7 @@ public class MessageServer_SpawnDool implements IMessage, IMessageHandler<Messag
 	@Override
 	public IMessage onMessage(MessageServer_SpawnDool message, MessageContext ctx) {
 		try{
-			WorldServer lworld = (WorldServer) ctx.getServerHandler().playerEntity.worldObj;
+			WorldServer lworld = (WorldServer) ctx.getServerHandler().player.world;
 			Entity lentity = null;
 			EntityDool ldool = null;
 			ServerDool lserver = null;
@@ -79,19 +80,19 @@ public class MessageServer_SpawnDool implements IMessage, IMessageHandler<Messag
 				// 未選択でGUI閉じたのでアイテムをドロップ
 				EntityItem leitem = new EntityItem(lworld, lx, ly + 0.25D, lz, new ItemStack(Dools.dool));
 				leitem.setDefaultPickupDelay();
-				lworld.spawnEntityInWorld(leitem);
+				lworld.spawnEntity(leitem);
 				ModLog.log().debug("SpawnItem:" +lx+"," +ly+"," +lz+ "Server.");
 			} else {
 				// 指定値にフィギュアをスポーン
 				String lname = message.mobString;
 				try {
 					ldool = Dools.getEntityMob(lworld);
-					lentity = EntityList.createEntityByName(lname, lworld);
+					lentity = EntityList.createEntityByIDFromName(new ResourceLocation(lname), lworld);
 					ldool.setRenderEntity((EntityLivingBase)lentity);
 					ldool.setPositionAndRotation(lx, ly, lz, lyaw, 0F);
-					lworld.spawnEntityInWorld(ldool);
-					EntityPlayer pl = ctx.getServerHandler().playerEntity;
-					lworld.playSound(pl, new BlockPos(pl.posX,pl.posY,pl.posZ), SoundEvents.block_stone_place, SoundCategory.BLOCKS ,0.5F, 0.4F / ((new Random()).nextFloat() * 0.4F + 0.8F));
+					lworld.spawnEntity(ldool);
+					EntityPlayer pl = ctx.getServerHandler().player;
+					lworld.playSound(pl, new BlockPos(pl.posX,pl.posY,pl.posZ), SoundEvents.BLOCK_STONE_PLACE, SoundCategory.BLOCKS ,0.5F, 0.4F / ((new Random()).nextFloat() * 0.4F + 0.8F));
 					//lworld.playSoundAtEntity(ctx.getServerHandler().playerEntity, "step.wood",0.5F, 0.4F / ((new Random()).nextFloat() * 0.4F + 0.8F));
 					ModLog.log().debug("SpawnFigure: "+lname+", "+lx+", "+ly+", "+lz+" Server.");
 				} catch (Exception e) {

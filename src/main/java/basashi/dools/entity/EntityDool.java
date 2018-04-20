@@ -12,6 +12,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.MoverType;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTBase;
@@ -23,12 +24,13 @@ import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumHand;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.registry.IEntityAdditionalSpawnData;
 
-public class EntityDool extends Entity implements IEntityAdditionalSpawnData {
+public class EntityDool extends Entity implements IEntityAdditionalSpawnData{
     private static final DataParameter<Byte> Watch0 = EntityDataManager.<Byte>createKey(Entity.class, DataSerializers.BYTE);
 
 	public static final String NAEM = "entitydool";
@@ -51,13 +53,14 @@ public class EntityDool extends Entity implements IEntityAdditionalSpawnData {
 		changeCount = -1;
 		fyOffset = 0F;
 		zoom = ConfigValue.General.defaultZoomRate;
+		mobString = "";
 	}
 
 	public EntityDool(World world, Entity entity) {
 		this(world);
 
 		if (entity == null || !(entity instanceof EntityLivingBase)) {
-			entity = EntityList.createEntityByName("Zombie", world);
+			entity = EntityList.createEntityByIDFromName(new ResourceLocation("Zombie"), world);
 		}
 		setRenderEntity((EntityLivingBase) entity);
 		Dools.proxy.getGui(this);
@@ -76,7 +79,7 @@ public class EntityDool extends Entity implements IEntityAdditionalSpawnData {
 	@Override
 	protected void entityInit() {
 		//dataWatcher.addObject(5, (byte)-1);
-		dataWatcher.register(Watch0, (byte)-1);
+		this.dataManager.register(Watch0, (byte)-1);
 	}
 
 	@Override
@@ -96,8 +99,8 @@ public class EntityDool extends Entity implements IEntityAdditionalSpawnData {
 		health = tagCompund.getShort("Health");
 		additionalYaw = tagCompund.getFloat("additionalYaw");
 		if (s != null) {
-			Entity lentity = EntityList.createEntityByName(
-					tagCompund.getString("mobString"), worldObj);
+			Entity lentity = EntityList.createEntityByIDFromName(
+					new ResourceLocation(tagCompund.getString("mobString")), world);
 			if (lentity == null || !(lentity instanceof EntityLivingBase)) {
 				// 存在しないMOB
 				System.out.println(String.format("figua-lost:%s",
@@ -150,11 +153,11 @@ public class EntityDool extends Entity implements IEntityAdditionalSpawnData {
 
 	@Override
 	public boolean attackEntityFrom(DamageSource damagesource, float i) {
-		Entity entity = damagesource.getEntity();
-		if (worldObj.isRemote || isDead) {
+		Entity entity = damagesource.getTrueSource();
+		if (world.isRemote || isDead) {
 			return true;
 		}
-		setBeenAttacked();
+		markVelocityChanged();
 		if (entity instanceof EntityPlayer) {
 			if (this.isRiding()){this.dismountRidingEntity();}
 			ItemStack lis = new ItemStack(Dools.dool, 1, mobIndex);
@@ -163,6 +166,10 @@ public class EntityDool extends Entity implements IEntityAdditionalSpawnData {
 			}
 			NBTTagCompound lnbt = lis.getTagCompound();
 			lnbt.setString("FigureName", mobString);
+
+			if (!lis.isEmpty()){
+				Dools.instance.registerModel(lis);
+			}
 			entityDropItem(lis, 0.0F);
 			setDead();
 		} else {
@@ -180,7 +187,7 @@ public class EntityDool extends Entity implements IEntityAdditionalSpawnData {
 	}
 
 	@Override
-	 public void setPositionAndRotation2(double x, double y, double z, float yaw, float pitch, int posRotationIncrements, boolean p_180426_10_){
+	 public void setPositionAndRotationDirect(double x, double y, double z, float yaw, float pitch, int posRotationIncrements, boolean p_180426_10_){
 		this.setPosition(x,y, z);
 		this.setRotation(yaw, pitch);
 	}
@@ -188,7 +195,7 @@ public class EntityDool extends Entity implements IEntityAdditionalSpawnData {
 	@Override
 	public void onUpdate() {
 		super.onUpdate();
-		if (!isFirst && worldObj.isRemote) {
+		if (!isFirst && world.isRemote) {
 			// サーバーへ固有データの要求をする
 			Dools.proxy.getDoolData(this);
 			isFirst = true;
@@ -209,7 +216,7 @@ public class EntityDool extends Entity implements IEntityAdditionalSpawnData {
 			motionZ *= 0.5D;
 		}
 		pushOutOfBlocks(posX, (this.getEntityBoundingBox().minY + this.getEntityBoundingBox().maxY) / 2D, posZ);
-		moveEntity(motionX, motionY, motionZ);
+		move(MoverType.PLAYER, motionX, motionY, motionZ);
 
 		// 速度減衰
 		motionX *= 0.99000000953674316D;
@@ -217,7 +224,7 @@ public class EntityDool extends Entity implements IEntityAdditionalSpawnData {
 		motionZ *= 0.99000000953674316D;
 
 		// 当り判定
-		List list = worldObj.getEntitiesWithinAABBExcludingEntity(this,
+		List list = world.getEntitiesWithinAABBExcludingEntity(this,
 				getEntityBoundingBox().expand(0.02D, 0.0D, 0.02D));
 		if (list != null && list.size() > 0) {
 			for (int j1 = 0; j1 < list.size(); j1++) {
@@ -230,15 +237,16 @@ public class EntityDool extends Entity implements IEntityAdditionalSpawnData {
 		if (renderEntity != null) {
 			setFlag(2, renderEntity.isRiding());
 			renderEntity.setPosition(posX, posY, posZ);
+			renderEntity.ticksExisted = this.ticksExisted;
 		}
 	}
 
 	@Override
 	//public boolean interactFirst(EntityPlayer entityplayer) {
-	public EnumActionResult applyPlayerInteraction(EntityPlayer player, Vec3d vec, ItemStack stack, EnumHand hand){
-		if (worldObj.isRemote) {
+	public EnumActionResult applyPlayerInteraction(EntityPlayer player, Vec3d vec, EnumHand hand){
+		if (world.isRemote) {
 			// Client
-			Dools.proxy.openGuiPause(player, this, Minecraft.getMinecraft().theWorld);
+			Dools.proxy.openGuiPause(player, this, Minecraft.getMinecraft().world);
 		}
 		return EnumActionResult.SUCCESS;
 	}
@@ -259,7 +267,7 @@ public class EntityDool extends Entity implements IEntityAdditionalSpawnData {
 		int len = additionalData.readInt();
 		byte[] buf = new byte[len];
 		additionalData.readBytes(buf);
-		lentity = EntityList.createEntityByName(new String(buf), worldObj);
+		lentity = EntityList.createEntityByIDFromName(new ResourceLocation(new String(buf)), world);
 		setRenderEntity((EntityLivingBase) lentity);
 		Dools.proxy.getGui(this);
 	}
@@ -267,9 +275,9 @@ public class EntityDool extends Entity implements IEntityAdditionalSpawnData {
 	public void setRenderEntity(EntityLivingBase entity) {
 		renderEntity = entity;
 		if (renderEntity != null) {
-			renderEntity.setWorld(worldObj);
-			mobString = EntityList.getEntityString(renderEntity);
-			mobIndex = EntityList.getEntityID(renderEntity);
+			renderEntity.setWorld(world);
+			mobString = EntityList.getKey(renderEntity).toString();
+			mobIndex = EntityList.getID(renderEntity.getClass());
 			setZoom(zoom);
 		}
 	}

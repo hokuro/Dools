@@ -27,7 +27,7 @@ public class MessagePause_Client implements IMessage, IMessageHandler<MessagePau
 	public IMessage onMessage(MessagePause_Client message, MessageContext ctx) {
 		try{
 			// 独自パケットチャンネルの受信
-			World lworld = Minecraft.getMinecraft().theWorld;
+			World lworld = Minecraft.getMinecraft().world;
 			Entity lentity = null;
 			EntityDool lfigure = null;
 			ServerDool lserver = null;

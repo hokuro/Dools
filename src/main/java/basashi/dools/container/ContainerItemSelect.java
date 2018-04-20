@@ -82,7 +82,7 @@ public class ContainerItemSelect extends Container {
 							var5 + var4 * 9, (ItemStack) this.itemList.get(var6));
 				} else {
 					GuiItemSelect.inventory.setInventorySlotContents(
-							var5 + var4 * 9, (ItemStack) null);
+							var5 + var4 * 9, (ItemStack) ItemStack.EMPTY);
 				}
 			}
 		}
@@ -92,18 +92,15 @@ public class ContainerItemSelect extends Container {
 		return this.itemList.size() > 45;
 	}
 
-	@Override
-	protected void retrySlotClick(int par1, int par2, boolean par3, EntityPlayer par4EntityPlayer) {
-	}
 
 	@Override
 	public ItemStack transferStackInSlot(EntityPlayer par1EntityPlayer, int par2) {
-		return null;
+		return ItemStack.EMPTY;
 	}
 
 	@Override
 	public boolean canMergeSlot(ItemStack par1ItemStack, Slot par2Slot) {
-		return par2Slot.yDisplayPosition > 90;
+		return par2Slot.yPos > 90;
 	}
 
 	@Override

@@ -22,7 +22,7 @@ public class SlotArmorDool extends Slot {
 	}
 
 	public boolean isItemValid(ItemStack par1ItemStack) {
-		if (par1ItemStack == null) return false;
+		if (par1ItemStack.isEmpty()) return false;
 		Item litem = par1ItemStack.getItem();
 
 		par1ItemStack.getItem().isValidArmor(par1ItemStack, armorType, ((ContainerItemSelect)parent).openPlayer);
@@ -30,7 +30,7 @@ public class SlotArmorDool extends Slot {
 		if (litem instanceof ItemArmor) {
 			return ((ItemArmor)litem).armorType == armorType;
 		}
-		if (Block.getBlockFromItem(litem) == Blocks.pumpkin || litem == Items.skull) {
+		if (Block.getBlockFromItem(litem) == Blocks.PUMPKIN || litem == Items.SKULL) {
 			return armorType == EntityEquipmentSlot.HEAD;
 		}
 		return false;

@@ -5,7 +5,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,16 +19,15 @@ import basashi.dools.event.McEventHandler;
 import basashi.dools.item.ItemDool;
 import basashi.dools.network.MessageHandler;
 import basashi.dools.server.ServerDool;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.creativetab.CreativeTabs;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
-import net.minecraft.entity.EntityLiving;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.monster.EntityMob;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.crafting.Ingredient;
+import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.translation.LanguageMap;
 import net.minecraft.world.World;
@@ -45,6 +43,7 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
 import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import net.minecraftforge.fml.common.registry.EntityRegistry;
+import net.minecraftforge.fml.common.registry.ForgeRegistries;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 
 @Mod(modid = ModCommon.MOD_ID, name = ModCommon.MOD_NAME, version = ModCommon.MOD_VERSION)
@@ -76,37 +75,15 @@ public class Dools {
 
 		// アイテム定義
 		dool = new ItemDool();
-		GameRegistry.register(dool);
+		ForgeRegistries.ITEMS.register(dool);
 		if(event.getSide().isClient()){
 			// モデル登録
 			ModelLoader.setCustomModelResourceLocation(dool, 0, new ModelResourceLocation(ModCommon.MOD_ID + ":" + ItemDool.NAME, "inventory"));
 			proxy.setZoomRate();
 		}
 
-//		Map<Class<Entity>, Integer> ci =
-//				(Map<Class<Entity>, Integer> )getPrivateValue(EntityList.class,null,"classToIDMapping");
-		List<ResourceLocation> names = new ArrayList<ResourceLocation>();
-		List<String> engs = new ArrayList<String>();
-		engs.add("item.dool.name=dool");
-		for (Class<? extends Entity> cl : EntityList.classToStringMapping.keySet()){
-			if (EntityLivingBase.class.isAssignableFrom(cl)) {
-				engs.add((new StringBuilder("item.").append("dool.").append(EntityList.classToStringMapping.get(cl)).append(".name=").append(EntityList.classToStringMapping.get(cl))).toString());
-				names.add(new ResourceLocation((new StringBuilder()).append(ModCommon.MOD_ID).append(":").append(ItemDool.NAME).append("_").append(EntityList.classToStringMapping.get(cl)).toString()));
 
-				if (event.getSide().isClient()){
-					ModelLoader.setCustomModelResourceLocation((new ItemStack(dool,1,EntityList.getIDFromString(EntityList.classToStringMapping.get(cl)))).getItem(),
-							EntityList.getIDFromString(EntityList.classToStringMapping.get(cl)), new ModelResourceLocation(ModCommon.MOD_ID + ":" + ItemDool.NAME, "inventory"));
-				}
-			}
-		}
 
-		ResourceLocation[] wresource = new ResourceLocation[names.size()];
-		names.toArray(wresource);
-		// 名称の追加
-		ModelLoader.registerItemVariants(dool, wresource);
-
-		AddLang("en_US",engs);
-		//AddLang("ja_JP",engs);
 		MessageHandler.init();
 	}
 
@@ -115,14 +92,22 @@ public class Dools {
 		//INSTANCE.register(this)
 
 		// レシピ追加
-		GameRegistry.addShapelessRecipe(new ItemStack(dool,1,0), Items.stick,Items.clay_ball);
-		GameRegistry.addShapelessRecipe(new ItemStack(Items.clay_ball),dool);
+		GameRegistry.addShapelessRecipe(
+				new ResourceLocation(ModCommon.MOD_ID+":"+ItemDool.NAME),
+				new ResourceLocation(ModCommon.MOD_ID+":"+ItemDool.NAME),
+				new ItemStack(dool,1,0),
+				Ingredient.fromItem(Items.STICK), Ingredient.fromItem(Items.CLAY_BALL));
+		GameRegistry.addShapelessRecipe(
+				new ResourceLocation(ModCommon.MOD_ID+":"+ItemDool.NAME+"2"),
+				new ResourceLocation(ModCommon.MOD_ID+":"+ItemDool.NAME),
+				new ItemStack(Items.CLAY_BALL),
+				Ingredient.fromItem(dool));
 
 
 		// エンティティ登録
-		EntityRegistry.registerModEntity(EntityDool.class, EntityDool.NAEM, 0, this.instance, 80, 3, true);
+		EntityRegistry.registerModEntity(new ResourceLocation(ModCommon.MOD_ID+":"+EntityDool.NAEM), EntityDool.class, EntityDool.NAEM, 0, this.instance, 80, 3, true);
 		if ( ConfigValue.General.isFigurePlayer){
-			EntityRegistry.registerModEntity(EntityDoolPlayer.class, EntityDoolPlayer.NAME, ConfigValue.General.UniqueEntityIdFigurePlayer, this.instance, 64, 10, false);
+			EntityRegistry.registerModEntity(new ResourceLocation(ModCommon.MOD_ID+":"+EntityDoolPlayer.NAME), EntityDoolPlayer.class, EntityDoolPlayer.NAME, ConfigValue.General.UniqueEntityIdFigurePlayer, this.instance, 64, 10, false);
 		}
 		try{
 			ItemDool.entDool = getEntityMob(null);
@@ -137,51 +122,26 @@ public class Dools {
 	@EventHandler
 	public void postInit(FMLPostInitializationEvent event){
 		try{
-			Map<String, Class<Entity>> sc = (Map<String,Class<Entity>>)getPrivateValue(EntityList.class,null,"stringToClassMapping");
-			Map<Class<Entity>, Integer> ci = (Map<Class<Entity>, Integer> )getPrivateValue(EntityList.class,null,"classToIDMapping");
-
-
-			Package packege1 = Dools.class.getPackage();
-			String strpackege = "";
-			if (packege1 != null) {
-				strpackege = packege1.getName();
-			}
-			if (!strpackege.isEmpty()) {
-				strpackege += ".";
-			}
-			if (sc != null && ci != null) {
-				int cnt = 0;
-				for (Map.Entry<String, Class<Entity>> me : sc.entrySet()) {
-					Class<Entity> cl = (Class<Entity>) me.getValue();
-					if (EntityLiving.class.isAssignableFrom(cl)
-							&& !cl.isAssignableFrom(EntityLiving.class)
-							&& !cl.isAssignableFrom(EntityMob.class)) {
-						// オートでGUIを追加
-						addGui(strpackege, me.getKey(),event.getSide().isClient());
-					}
-				}
-
+			for (ResourceLocation res : EntityList.getEntityNameList()){
+				addGui(res.getResourcePath(),event.getSide().isClient());
 			}
 			defServerFigure = new ServerDool();
+			NonNullList<ItemStack> s = NonNullList.create();
+			dool.getSubItems(tabsDool, s);
 		}catch(Exception exception){
 			exception.printStackTrace();
 		}
-
-		GameRegistry.addShapelessRecipe(new ItemStack(Items.clay_ball),
-				new Object[] { new ItemStack(dool, 1, Short.MAX_VALUE) });
 	}
 
 
-	public void addGui(String pPackegeName, String pName, boolean isClient) {
+	public void addGui(String pName, boolean isClient) {
 		if (pName != null && pName.length() > 0) {
 			ClassLoader classloader1 = Dools.class.getClassLoader();
 			String lcs1, lcs2;
 			Class lclass1 = null, lclass2 = null;
 			ServerDool lserver = null;
 			String ppName = pName;
-			if (ppName.contains("dools")){
-				ppName = pName.substring("dools.".length());
-			}
+
 			if (isClient) {
 				try {
 					lcs1 = (new StringBuilder()).append("basashi.dools.gui.")
@@ -211,6 +171,13 @@ public class Dools {
 		}
 	}
 
+	public void registerModel(ItemStack stack){
+		if (Minecraft.getMinecraft().getRenderItem().getItemModelMesher().getItemModel(stack) ==
+				Minecraft.getMinecraft().getRenderItem().getItemModelMesher().getModelManager().getMissingModel()){
+			Minecraft.getMinecraft().getRenderItem().getItemModelMesher().register(Dools.dool, stack.getMetadata(), new ModelResourceLocation(ModCommon.MOD_ID + ":" + ItemDool.NAME, "inventory"));
+		}
+	}
+
 	/**
 	 * 独自通信用処理を獲得する。
 	 */
@@ -218,9 +185,9 @@ public class Dools {
 		if (pEntity.renderEntity == null) {
 			return null;
 		}
-		String ls = pEntity.mobString;
-		if (serverMap.containsKey(ls)) {
-			return serverMap.get(ls);
+		ResourceLocation ls = new ResourceLocation(pEntity.mobString);
+		if (serverMap.containsKey(ls.getResourcePath())) {
+			return serverMap.get(ls.getResourcePath());
 		}
 		return defServerFigure;
 	}
@@ -276,6 +243,7 @@ public class Dools {
 			return new ByteArrayInputStream(inner.toByteArray());
 		}
 	}
+
 
 
 

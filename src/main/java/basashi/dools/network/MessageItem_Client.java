@@ -37,7 +37,7 @@ public class MessageItem_Client implements IMessage, IMessageHandler<MessageItem
 	@Override
 	public void fromBytes(ByteBuf buf) {
 		int lslotid3 = 0;
-		ItemStack lis3 = null;
+		ItemStack lis3 = ItemStack.EMPTY;
 		try {
 			entityId =buf.readInt();
 			slotIdx = buf.readByte();
@@ -64,7 +64,7 @@ public class MessageItem_Client implements IMessage, IMessageHandler<MessageItem
 	@Override
 	public IMessage onMessage(MessageItem_Client message, MessageContext ctx) {
 		try{
-			World lworld = Minecraft.getMinecraft().theWorld;
+			World lworld = Minecraft.getMinecraft().world;
 			Entity lentity = null;
 			EntityDool ldool = null;
 			ServerDool lserver = null;

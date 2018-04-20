@@ -67,7 +67,7 @@ public class GuiDoolPause extends GuiScreen {
 	@Override
 	public void drawScreen(int i, int j, float f) {
 		drawDefaultBackground();
-		drawCenteredString(this.fontRendererObj, screenTitle, width / 2, 20, 0xffffff);
+		drawCenteredString(this.fontRenderer, screenTitle, width / 2, 20, 0xffffff);
 
 		// 基準の向きを変更
 		targetEntity.additionalYaw = figureYaw.getSliderValue();
@@ -103,7 +103,7 @@ public class GuiDoolPause extends GuiScreen {
 		GL11.glTranslatef(0.0F, (float)elt.getYOffset(), 0.0F);
 		Minecraft.getMinecraft().getRenderManager().playerViewY = 180F;
 		//Minecraft.getMinecraft().getRenderManager().renderEntityWithPosYaw(elt, 0.0D, 0.0D, 0.0D, 0.0F, 1.0F);
-		Minecraft.getMinecraft().getRenderManager().doRenderEntity(elt, 0.0D, 0.0D, 0.0D, 0.0F, 1.0F,false);
+		Minecraft.getMinecraft().getRenderManager().renderEntity(elt, 0.0D, 0.0D, 0.0D, 0.0F, 1.0F,false);
 		elt.renderYawOffset = f2;
 		elt.prevRotationYaw = elt.rotationYaw + f2;
 		elt.prevRotationPitch = elt.rotationPitch;
@@ -248,7 +248,7 @@ public class GuiDoolPause extends GuiScreen {
 			// 装備品の設定
 			GuiItemSelect.clearInventory();
 			getItems();
-			mc.displayGuiScreen(new GuiItemSelect(this, targetEntity.renderEntity, mc.thePlayer));
+			mc.displayGuiScreen(new GuiItemSelect(this, targetEntity.renderEntity, mc.player));
 		}
 
 		if (guibutton.id == 20) {

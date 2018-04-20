@@ -66,7 +66,7 @@ public class EntityPlayerRender extends RenderLivingBase<EntityDoolPlayer>
         if ( entity.isSlim() != smallArms){
         	smallArms = entity.isSlim();
         	this.mainModel = new ModelPlayer(0.0F, smallArms);
-        	this.removeLayer(customHed);
+        	this.layerRenderers.remove(customHed);
         	customHed = new LayerCustomHead(this.getMainModel().bipedHead);
             this.addLayer(customHed);
         }
@@ -82,14 +82,14 @@ public class EntityPlayerRender extends RenderLivingBase<EntityDoolPlayer>
 
         if (clientPlayer.isSpectator)
         {
-            modelplayer.setInvisible(false);
+            modelplayer.setVisible(false);
             modelplayer.bipedHead.showModel = true;
             modelplayer.bipedHeadwear.showModel = true;
         }
         else
         {
             ItemStack itemstack = clientPlayer.getHeldItem(EnumHand.MAIN_HAND);
-            modelplayer.setInvisible(true);
+            modelplayer.setVisible(true);
             modelplayer.bipedHeadwear.showModel = clientPlayer.isHat;
             modelplayer.bipedBodyWear.showModel = clientPlayer.isJacket;
             modelplayer.bipedLeftLegwear.showModel = clientPlayer.isLeftLeg;
@@ -101,7 +101,7 @@ public class EntityPlayerRender extends RenderLivingBase<EntityDoolPlayer>
             //modelplayer.aimedBow = false;
             modelplayer.isSneak = clientPlayer.isSneaking();
 
-            if (itemstack == null)
+            if (itemstack.isEmpty())
             {
             	modelplayer.leftArmPose = ArmPose.EMPTY;
                 modelplayer.rightArmPose = ArmPose.EMPTY;

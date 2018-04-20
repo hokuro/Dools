@@ -43,7 +43,7 @@ public class MessageItem implements IMessage, IMessageHandler<MessageItem, IMess
 	@Override
 	public void fromBytes(ByteBuf buf) {
 		int lslotid3 = 0;
-		ItemStack lis3 = null;
+		ItemStack lis3 = ItemStack.EMPTY;
 		try {
 			entityId =buf.readInt();
 			slotIdx = buf.readByte();
@@ -71,7 +71,7 @@ public class MessageItem implements IMessage, IMessageHandler<MessageItem, IMess
 	@Override
 	public IMessage onMessage(MessageItem message, MessageContext ctx) {
 		try{
-			WorldServer lworld = (WorldServer) ctx.getServerHandler().playerEntity.worldObj;
+			WorldServer lworld = (WorldServer) ctx.getServerHandler().player.world;
 			Entity lentity = null;
 			EntityDool ldool = null;
 			ServerDool lserver = null;

@@ -10,7 +10,9 @@ import basashi.dools.server.ServerDool;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 
 /**
@@ -74,7 +76,9 @@ public class GuiDoolSelect extends GuiMobSelect {
 
 	@Override
 	public void drawSlot(int pSlotindex, int pX, int pY, int pDrawheight, Tessellator pTessellator, String pName, Entity pEntity) {
-		drawString(fontRendererObj, pName, (width - fontRendererObj.getStringWidth(pName)) / 2, pY + 10, 0xffffff);
+		String name;
+		name = EntityList.getTranslationName(new ResourceLocation(pName))!=null?EntityList.getTranslationName(new ResourceLocation(pName)):pName;
+		drawString(fontRenderObj(), name, (width - fontRenderer.getStringWidth(name)) / 2, pY + 10, 0xffffff);
 	}
 
 

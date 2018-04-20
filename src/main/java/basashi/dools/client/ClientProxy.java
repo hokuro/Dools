@@ -76,7 +76,7 @@ public class ClientProxy extends CommonProxy implements IItemRenderManager {
 	 * 独自のGUIを獲得する。
 	 */
 	public GuiDoolPause getGui(EntityDool pEntity) {
- 		Class<GuiDoolPause> cl = Dools.guiClassMap.get(pEntity.mobString);
+ 		Class<GuiDoolPause> cl = Dools.guiClassMap.get(new ResourceLocation(pEntity.mobString).getResourcePath());
 		GuiDoolPause g = null;
 		pEntity.afterrender = null;
 		if (cl != null) {
@@ -118,7 +118,7 @@ public class ClientProxy extends CommonProxy implements IItemRenderManager {
 	public void initEntitys() {
 		if (ItemDool.entityStringMap.isEmpty()) {
 			// リストがブランクなら生成する
-			new GuiDoolSelect(Minecraft.getMinecraft().theWorld, null);
+			new GuiDoolSelect(Minecraft.getMinecraft().world, null);
 		}
 	}
 
@@ -211,7 +211,7 @@ public class ClientProxy extends CommonProxy implements IItemRenderManager {
 		}
 		ItemDool.firstPerson = null;
 
-		ItemDool.entDool.setWorld(Minecraft.getMinecraft().theWorld);
+		ItemDool.entDool.setWorld(Minecraft.getMinecraft().world);
 		ItemDool.entDool.setPositionAndRotation(0, 0, 0, 0F, 0F);
 		ItemDool.entDool.setRenderEntity(ItemDool.getEntityFromItemStack(pItemStack));
 		ItemDool.entDool.renderEntity.setPositionAndRotation(0, 0, 0, 0F, 0F);

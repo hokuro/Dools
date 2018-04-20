@@ -60,7 +60,7 @@ public class ServerDool {
 				pFigure.setZoom(pFigure.zoom);
 				int lf = lds.readByte(); 						// Flags
 				pFigure.isFigureRide = (lf & 1) != 0;
-				if (pFigure.worldObj.isRemote) {
+				if (pFigure.world.isRemote) {
 					// Client
 					if (pFigure.isFigureRide){
 						lel.startRiding(pFigure);

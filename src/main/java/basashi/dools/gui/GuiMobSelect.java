@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 
 import basashi.dools.core.log.ModLog;
 import net.minecraft.client.gui.FontRenderer;
@@ -15,12 +14,14 @@ import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.translation.I18n;
 import net.minecraft.world.World;
 
 public abstract class GuiMobSelect extends GuiScreen {
 
 	public Map<String, Entity> entityMap;
+	public static List<String> orderlist = new ArrayList<String>();
 	public static Map<Class, String> entityMapClass = new HashMap<Class, String>();
 	public static List<String> exclusionList = new ArrayList<String>();
 
@@ -28,13 +29,13 @@ public abstract class GuiMobSelect extends GuiScreen {
 	protected GuiSlot selectPanel;
 
 	public FontRenderer fontRenderObj(){
-		return this.fontRendererObj;
+		return this.fontRenderer;
 	}
 
 
 
 	public GuiMobSelect(World pWorld) {
-		entityMap = new TreeMap<String, Entity>();
+		entityMap = new HashMap<String,Entity>();// new TreeMap<String, Entity>();
 		initEntitys(pWorld, true);
 	}
 
@@ -48,8 +49,11 @@ public abstract class GuiMobSelect extends GuiScreen {
 		// 表示用EntityListの初期化
 		if (entityMapClass.isEmpty()) {
 			try {
-				Map lmap = EntityList.classToStringMapping;
-				entityMapClass.putAll(lmap);
+				for (ResourceLocation res:  EntityList.getEntityNameList()){
+					if (EntityList.getClass(res)!=null){
+						entityMapClass.put(EntityList.getClass(res),res.toString());
+					}
+				}
 			}
 			catch (Exception e) {
 				ModLog.log().debug("EntityClassMap copy failed.");
@@ -65,23 +69,44 @@ public abstract class GuiMobSelect extends GuiScreen {
 			Entity lentity = null;
 			try {
 				// 表示用のEntityを作る
-				do {
-					lentity = (EntityLivingBase)le.getKey().getConstructor(World.class).newInstance(world);
-				} while (lentity != null && checkEntity(le.getValue(), lentity, li++));
+				lentity = (Entity)le.getKey().getConstructor(World.class).newInstance(world);
+				if (!(lentity instanceof EntityLivingBase)){
+					lentity = null;
+				}else{
+					entityMap.put(le.getValue(), lentity);
+					Order(le.getValue());
+				}
 			} catch (Exception e) {
-				ModLog.log().debug("Entity [" + le.getValue() + "] can't created.");
+				ModLog.log().debug("Entity [" + le.getValue() + "] can't created." + e.toString());
 			}
 		}
 	}
 
-	/**
-	 * 渡されたEntityのチェック及び加工。
-	 * trueを返すと同じクラスのエンティティを再度渡してくる、そのときpIndexはカウントアップされる
-	 */
-	protected boolean checkEntity(String pName, Entity pEntity, int pIndex) {
-		entityMap.put(pName, pEntity);
-		return false;
+	private void Order(String var){
+		if (orderlist.contains(var)){return;}
+		
+		String next = (new ResourceLocation(var)).getResourcePath();
+		int insert = 0;
+		boolean bk = false;
+		for (int i = 0; i < orderlist.size();i++){
+			insert = i;
+			if ((new ResourceLocation(orderlist.get(i))).getResourcePath().compareTo(next) >=0 ){
+				bk = true;
+				break;
+			}
+		}
+		ModLog.log().debug("insert:" + insert);
+		if (bk){
+			try{
+				orderlist.add(insert, var);
+			}catch(Exception ex){
+				ModLog.log().debug("insert:" + insert);
+			}
+		}else{
+			orderlist.add(var);
+		}
 	}
+
 
 	@Override
 	public void initGui() {
@@ -98,7 +123,7 @@ public abstract class GuiMobSelect extends GuiScreen {
 
 		drawDefaultBackground();
 		selectPanel.drawScreen(px, py, pf);
-		drawCenteredString(fontRendererObj, I18n.translateToLocal(screenTitle), width / 2, 20, 0xffffff);
+		drawCenteredString(fontRenderObj(), I18n.translateToLocal(screenTitle), width / 2, 20, 0xffffff);
 		super.drawScreen(px, py, pf);
 
 		// GUIで表示した分のボスのステータスを表示しない

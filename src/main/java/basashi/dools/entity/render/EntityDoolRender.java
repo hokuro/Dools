@@ -38,7 +38,7 @@ public class EntityDoolRender extends Render {
 			//GL11.glRotatef(ef.rotationYaw + ef.additionalYaw, 0F, 1F, 0F);
 			GL11.glRotatef(ef.rotationYaw + ef.additionalYaw, 0F, 1F, 0F);
 			//renderManager.renderEntityWithPosYaw(ef.renderEntity, 0, 0, 0, 0, 0);
-			renderManager.doRenderEntity(ef.renderEntity, 0, 0, 0, 0, 0,false);
+			renderManager.renderEntity(ef.renderEntity, 0, 0, 0, 0, 0,false);
 			GL11.glPopMatrix();
 			Dools.proxy.callAfterRender(ef);
 
