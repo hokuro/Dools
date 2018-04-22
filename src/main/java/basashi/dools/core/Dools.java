@@ -9,6 +9,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.annotation.Nonnull;
+
 import basashi.dools.config.ConfigValue;
 import basashi.dools.core.log.ModLog;
 import basashi.dools.creative.CreativeTabDools;
@@ -26,12 +28,18 @@ import net.minecraft.entity.EntityList;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.item.crafting.Ingredient;
+import net.minecraft.item.crafting.ShapedRecipes;
+import net.minecraft.item.crafting.ShapelessRecipes;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.translation.LanguageMap;
 import net.minecraft.world.World;
 import net.minecraftforge.client.model.ModelLoader;
+import net.minecraftforge.common.crafting.CraftingHelper;
+import net.minecraftforge.common.crafting.CraftingHelper.ShapedPrimer;
+import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
@@ -40,13 +48,18 @@ import net.minecraftforge.fml.common.event.FMLConstructionEvent;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
 import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import net.minecraftforge.fml.common.registry.EntityRegistry;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 
-@Mod(modid = ModCommon.MOD_ID, name = ModCommon.MOD_NAME, version = ModCommon.MOD_VERSION)
+@Mod(modid = ModCommon.MOD_ID,
+name = ModCommon.MOD_NAME,
+version = ModCommon.MOD_VERSION,
+acceptedMinecraftVersions = ModCommon.MOD_ACCEPTED_MC_VERSIONS)
+@Mod.EventBusSubscriber
 public class Dools {
 	@Mod.Instance(ModCommon.MOD_ID)
 	public static Dools instance;
@@ -91,17 +104,19 @@ public class Dools {
 	public void init(FMLInitializationEvent event) {
 		//INSTANCE.register(this)
 
-		// レシピ追加
+//		// レシピ追加
+//		GameRegistry.addShapelessRecipe(
+//				new ResourceLocation(ModCommon.MOD_ID+":"+ItemDool.NAME),
+//				new ResourceLocation(ModCommon.MOD_ID+":"+ItemDool.NAME),
+//				new ItemStack(dool,1,0),
+//				Ingredient.fromItem(Items.STICK), Ingredient.fromItem(Items.CLAY_BALL));
+
+		// メタデータが不定なのでレシピブックに登録すると
 		GameRegistry.addShapelessRecipe(
-				new ResourceLocation(ModCommon.MOD_ID+":"+ItemDool.NAME),
-				new ResourceLocation(ModCommon.MOD_ID+":"+ItemDool.NAME),
-				new ItemStack(dool,1,0),
-				Ingredient.fromItem(Items.STICK), Ingredient.fromItem(Items.CLAY_BALL));
-		GameRegistry.addShapelessRecipe(
-				new ResourceLocation(ModCommon.MOD_ID+":"+ItemDool.NAME+"2"),
-				new ResourceLocation(ModCommon.MOD_ID+":"+ItemDool.NAME),
-				new ItemStack(Items.CLAY_BALL),
-				Ingredient.fromItem(dool));
+			new ResourceLocation(ModCommon.MOD_ID+":"+"clay_ball"),
+			new ResourceLocation(ModCommon.MOD_ID+":"+"clay_ball"),
+			new ItemStack(Items.CLAY_BALL),
+			Ingredient.fromItem(dool));
 
 
 		// エンティティ登録
@@ -244,30 +259,26 @@ public class Dools {
 		}
 	}
 
+	public static void addShapedRecipe(RegistryEvent.Register<IRecipe> event, ResourceLocation name, ResourceLocation group, @Nonnull ItemStack output, Object... params){
+        ShapedPrimer primer = CraftingHelper.parseShaped(params);
+        event.getRegistry().register(new ShapedRecipes(group == null ? "" : group.toString(), primer.width, primer.height, primer.input, output).setRegistryName(name));
+    }
 
+	public static void addShapelessRecipe(RegistryEvent.Register<IRecipe> event, ResourceLocation name, ResourceLocation group, @Nonnull ItemStack output, Ingredient... params)
+    {
+        NonNullList<Ingredient> lst = NonNullList.create();
+        for (Ingredient i : params)
+            lst.add(i);
+        event.getRegistry().register((new ShapelessRecipes(group == null ? "" : group.toString(), output, lst).setRegistryName(name)));
+    }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+	@SubscribeEvent
+	public static void registerRecipes(RegistryEvent.Register<IRecipe> event){
+//		 addShapelessRecipe(event,
+//			new ResourceLocation(ModCommon.MOD_ID+":"+"clay_ball"),
+//			new ResourceLocation(ModCommon.MOD_ID+":"+"clay_ball"),
+//			new ItemStack(Items.CLAY_BALL),
+//			Ingredient.fromItem(dool));
+	}
 
 }
