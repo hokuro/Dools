@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "group": "dools_clayball",
+  "ingredients": [
+    {
+      "item": "dools:dool",
+    }
+  ],
+  "result": {
+    "item": "minecraft:clay_ball"
+  }
+}
