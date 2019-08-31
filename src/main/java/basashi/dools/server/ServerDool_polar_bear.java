@@ -4,10 +4,10 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import basashi.dools.core.Dools;
 import basashi.dools.entity.EntityDool;
 import net.minecraft.entity.monster.EntityPolarBear;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 
 public class ServerDool_polar_bear extends ServerDool {
 	@Override
@@ -23,12 +23,16 @@ public class ServerDool_polar_bear extends ServerDool {
 		EntityPolarBear lentity = (EntityPolarBear)pFigure.renderEntity;
 		lentity.setStanding(pData.readBoolean());
 		if (lentity.isStanding()){
-			Dools.setPrivateValue(EntityPolarBear.class, lentity, 6, "clientSideStandAnimation0");
-			Dools.setPrivateValue(EntityPolarBear.class, lentity, 6, "clientSideStandAnimation");
+			//Dools.setPrivateValue(EntityPolarBear.class, lentity, 6, "clientSideStandAnimation0");
+			//Dools.setPrivateValue(EntityPolarBear.class, lentity, 6, "clientSideStandAnimation");
+			ObfuscationReflectionHelper.setPrivateValue(EntityPolarBear.class, lentity, 6, "clientSideStandAnimation0");
+			ObfuscationReflectionHelper.setPrivateValue(EntityPolarBear.class, lentity, 6, "clientSideStandAnimation");
 		}else{
 
-			Dools.setPrivateValue(EntityPolarBear.class, lentity, 0, "clientSideStandAnimation0");
-			Dools.setPrivateValue(EntityPolarBear.class, lentity, 0, "clientSideStandAnimation");
+			//Dools.setPrivateValue(EntityPolarBear.class, lentity, 0, "clientSideStandAnimation0");
+			//Dools.setPrivateValue(EntityPolarBear.class, lentity, 0, "clientSideStandAnimation");
+			ObfuscationReflectionHelper.setPrivateValue(EntityPolarBear.class, lentity, 0, "clientSideStandAnimation0");
+			ObfuscationReflectionHelper.setPrivateValue(EntityPolarBear.class, lentity, 0, "clientSideStandAnimation");
 		}
 	}
 	/*
@@ -39,11 +43,15 @@ public class ServerDool_polar_bear extends ServerDool {
 		 boolean stand = nbttagcompound.getBoolean("stand");
 		 ((EntityPolarBear)pFigure.renderEntity).setStanding(stand);
 		 if (stand){
-			Dools.setPrivateValue(EntityPolarBear.class, (EntityPolarBear)pFigure.renderEntity, 6, "clientSideStandAnimation0");
-			Dools.setPrivateValue(EntityPolarBear.class, (EntityPolarBear)pFigure.renderEntity, 6, "clientSideStandAnimation");
+			//Dools.setPrivateValue(EntityPolarBear.class, (EntityPolarBear)pFigure.renderEntity, 6, "clientSideStandAnimation0");
+			//Dools.setPrivateValue(EntityPolarBear.class, (EntityPolarBear)pFigure.renderEntity, 6, "clientSideStandAnimation");
+			ObfuscationReflectionHelper.setPrivateValue(EntityPolarBear.class, (EntityPolarBear)pFigure.renderEntity, 6, "clientSideStandAnimation0");
+			ObfuscationReflectionHelper.setPrivateValue(EntityPolarBear.class, (EntityPolarBear)pFigure.renderEntity, 6, "clientSideStandAnimation");
 		}else{
-			Dools.setPrivateValue(EntityPolarBear.class, (EntityPolarBear)pFigure.renderEntity, 0, "clientSideStandAnimation0");
-			Dools.setPrivateValue(EntityPolarBear.class, (EntityPolarBear)pFigure.renderEntity, 0, "clientSideStandAnimation");
+			//Dools.setPrivateValue(EntityPolarBear.class, (EntityPolarBear)pFigure.renderEntity, 0, "clientSideStandAnimation0");
+			//Dools.setPrivateValue(EntityPolarBear.class, (EntityPolarBear)pFigure.renderEntity, 0, "clientSideStandAnimation");
+			ObfuscationReflectionHelper.setPrivateValue(EntityPolarBear.class, (EntityPolarBear)pFigure.renderEntity, 0, "clientSideStandAnimation0");
+			ObfuscationReflectionHelper.setPrivateValue(EntityPolarBear.class, (EntityPolarBear)pFigure.renderEntity, 0, "clientSideStandAnimation");
 		}
 
 

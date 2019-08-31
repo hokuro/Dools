@@ -4,7 +4,7 @@ import java.util.UUID;
 
 import basashi.dools.core.Dools;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.ThreadDownloadImageData;
+import net.minecraft.client.renderer.texture.ThreadDownloadImageData;
 import net.minecraft.client.resources.DefaultPlayerSkin;
 import net.minecraft.entity.monster.EntityMob;
 import net.minecraft.nbt.NBTTagCompound;
@@ -33,7 +33,7 @@ public class EntityDoolPlayer extends EntityMob {
 
 
 	public EntityDoolPlayer(World world) {
-		super(world);
+		super(Dools.RegistryEvents.DOOLPLAYER, world);
 		skinUser = null;
 		skinSlim = 0;
 		isHat = true;
@@ -48,10 +48,10 @@ public class EntityDoolPlayer extends EntityMob {
 	}
 
 	@Override
-	public void readEntityFromNBT(NBTTagCompound nbttagcompound) {
-		super.readEntityFromNBT(nbttagcompound);
+	public void readAdditional(NBTTagCompound nbttagcompound) {
+		super.readAdditional(nbttagcompound);
 		skinUser = nbttagcompound.getString("SkinUser");
-		skinSlim = nbttagcompound.getInteger("SkinKind");
+		skinSlim = nbttagcompound.getInt("SkinKind");
 		isHat = nbttagcompound.getBoolean("WareHat");
 		isJacket = nbttagcompound.getBoolean("WareJacket");
 		isLeftLeg = nbttagcompound.getBoolean("WareLeftLeg");
@@ -64,14 +64,14 @@ public class EntityDoolPlayer extends EntityMob {
 	}
 
 	@Override
-	public void writeEntityToNBT(NBTTagCompound nbttagcompound) {
-		super.writeEntityToNBT(nbttagcompound);
+	public void writeAdditional(NBTTagCompound nbttagcompound) {
+		super.writeAdditional(nbttagcompound);
 		if (skinUser == null || skinUser.isEmpty()) {
 			nbttagcompound.setString("SkinUser", "");
 		} else {
 			nbttagcompound.setString("SkinUser", skinUser);
 		}
-		nbttagcompound.setInteger("SkinKind", skinSlim);
+		nbttagcompound.setInt("SkinKind", skinSlim);
 		nbttagcompound.setBoolean("WareHat",isHat);
 		nbttagcompound.setBoolean("WareJacket",isJacket);
 		nbttagcompound.setBoolean("WareLeftLeg",isLeftLeg);
@@ -84,10 +84,10 @@ public class EntityDoolPlayer extends EntityMob {
 
 	public ResourceLocation setURLSkin() {
 		// URLスキンを有効にする
-		if (!(Minecraft.getMinecraft() != null))
+		if (!(Minecraft.getInstance() != null))
 			return DefaultPlayerSkin.getDefaultSkin(UUIDS[skinSlim]);
 		if (skinUser != null && !skinUser.isEmpty()) {
-			fskinResorce = Dools.proxy.func_110311_f(skinUser);
+			fskinResorce = Dools.proxy.getSkinUrl(skinUser);
 			fskinDownload = Dools.proxy.getDownloadImageSkin(this.fskinResorce, skinUser, skinSlim);
 		} else {
 			UUID playerUUID;

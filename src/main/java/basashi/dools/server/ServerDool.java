@@ -8,12 +8,11 @@ import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-import basashi.dools.core.Dools;
 import basashi.dools.entity.EntityDool;
-import basashi.dools.network.MessageItem;
-import basashi.dools.network.MessageItem_Client;
+import basashi.dools.network.MessageHandler;
 import net.minecraft.entity.EntityAgeable;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -66,7 +65,7 @@ public class ServerDool {
 						lel.startRiding(pFigure);
 
 					}else{
-						lel.dismountRidingEntity();
+						lel.stopRiding();
 					}
 					//lel.ridingEntity = pFigure.isFigureRide ? pFigure : null;
 				} else {
@@ -88,12 +87,22 @@ public class ServerDool {
 	}
 
 	public void sendItem(int pIndex, EntityDool pdool, boolean pClient) {
+		this.sendItem(pIndex, pdool, pClient, null);
+	}
+
+	public void sendItem(int pIndex, EntityDool pdool, boolean pClient, EntityPlayerMP player) {
 		try {
-			MessageItem mitem = new MessageItem(pIndex, pdool);
+			//MessageItem mitem = new MessageItem(pIndex, pdool);
 			if (pClient){
-				Dools.INSTANCE.sendToServer(mitem);
+				MessageHandler.Send_MessageItem(pIndex, pdool);
+				//Dools.INSTANCE.sendToServer(mitem);
 			}else{
-				Dools.INSTANCE.sendToAll(new MessageItem_Client(pIndex,pdool));
+				if (player != null) {
+					MessageHandler.Send_MessageItem_Client(pIndex,pdool,player);
+					//Dools.INSTANCE.sendToAll(new MessageItem_Client(pIndex,pdool));
+				}else {
+					MessageHandler.Send_MessageItem_Client(pIndex,pdool);
+				}
 			}
 		} catch (Exception e) {
 			e.printStackTrace();

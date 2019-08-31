@@ -28,7 +28,7 @@ public class EntityDoolRender extends Render {
 			GL11.glPushMatrix();
 			GL11.glTranslatef(
 					(float) x,
-					(float) y + ef.fyOffset + ((ef.renderEntity.isRiding()
+					(float) y + ef.fyOffset + ((ef.renderEntity.isPassenger()
 							? (float) ef.renderEntity.getYOffset()
 									: (float)0.0) / ef.zoom),
 					//									: (float)ef.renderEntity.getYOffset()) / ef.zoom),

@@ -1,20 +1,19 @@
 package basashi.dools.network;
 
+import java.util.function.Supplier;
+
 import basashi.dools.core.Dools;
 import basashi.dools.core.log.ModLog;
 import basashi.dools.entity.EntityDool;
 import basashi.dools.server.ServerDool;
-import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
-import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
+import net.minecraftforge.fml.network.NetworkEvent;
 
-public class MessagePause_Client implements IMessage, IMessageHandler<MessagePause_Client, IMessage> {
+public class MessagePause_Client {
 
 	private byte data[];
 
@@ -23,42 +22,52 @@ public class MessagePause_Client implements IMessage, IMessageHandler<MessagePau
 		data = pause;
 	}
 
-	@Override
-	public IMessage onMessage(MessagePause_Client message, MessageContext ctx) {
-		try{
-			// 独自パケットチャンネルの受信
-			World lworld = Minecraft.getMinecraft().world;
-			Entity lentity = null;
-			EntityDool lfigure = null;
-			ServerDool lserver = null;
-			PacketBuffer buf = new PacketBuffer(Unpooled.wrappedBuffer(message.data));
-
-			int leid = buf.readInt();
-			lentity = lworld.getEntityByID(leid);
-			if (lentity instanceof EntityDool) {
-				lfigure = (EntityDool)lentity;
-				lserver = Dools.getServerFigure(lfigure);
-			}
-			// サーバーから姿勢制御データ等を受信
-			ModLog.log().debug("DataSet ID:"+lentity.getEntityId()+"(size:"+message.data.length+") Client.");
-			lserver.setData((EntityDool)lentity,message.data);
-		}catch(Exception ex){
-			ex.printStackTrace();
+	public static void encode(MessagePause_Client pkt, PacketBuffer buf)
+	{
+		buf.writeInt(pkt.data.length);
+		for (int i = 0; i < pkt.data.length; i++) {
+			buf.writeByte(pkt.data[i]);
 		}
-		return null;
 	}
 
-	@Override
-	public void fromBytes(ByteBuf buf) {
-		// TODO 自動生成されたメソッド・スタブ
-		data = new byte[buf.readableBytes()];
-		buf.readBytes(data);
+	public static MessagePause_Client decode(PacketBuffer buf)
+	{
+		int size = buf.readInt();
+		byte[] buffer = new byte[size];
+		for (int i = 0; i < buffer.length; i++) {
+			buffer[i] = buf.readByte();
+ 		}
+		return new MessagePause_Client(buffer);
 	}
 
-	@Override
-	public void toBytes(ByteBuf buf) {
-		// TODO 自動生成されたメソッド・スタブ
-		buf.writeBytes(data);
+	public static class Handler
+	{
+		public static void handle(final MessagePause_Client pkt, Supplier<NetworkEvent.Context> ctx)
+		{
+			ctx.get().enqueueWork(() -> {
+				try{
+					// 独自パケットチャンネルの受信
+					World lworld = Minecraft.getInstance().world;
+					Entity lentity = null;
+					EntityDool lfigure = null;
+					ServerDool lserver = null;
+					PacketBuffer buf = new PacketBuffer(Unpooled.wrappedBuffer(pkt.data));
+
+					int leid = buf.readInt();
+					lentity = lworld.getEntityByID(leid);
+					if (lentity instanceof EntityDool) {
+						lfigure = (EntityDool)lentity;
+						lserver = Dools.getServerFigure(lfigure);
+					}
+					// サーバーから姿勢制御データ等を受信
+					ModLog.log().debug("DataSet ID:"+lentity.getEntityId()+"(size:"+pkt.data.length+") Client.");
+					lserver.setData((EntityDool)lentity,pkt.data);
+				}catch(Exception ex){
+					ex.printStackTrace();
+				}
+			});
+			ctx.get().setPacketHandled(true);
+		}
 	}
 
 }

@@ -19,13 +19,32 @@ public class GuiDoolPause_ocelot extends GuiDoolPause {
 	@Override
 	public void initGui() {
 		super.initGui();
-		buttonList.add(new GuiButton(102, width / 2 - 140,
-				height / 6 + 0 + 12, 80, 20, button102[eo.isTamed() ? 0 : 1]));
-		buttonList
-				.add(new GuiButton(103, width / 2 - 140, height / 6 + 24 + 12,
-						80, 20, button103[eo.isSitting() ? 0 : 1]));
-		buttonList.add(new GuiButton(104, width / 2 - 140,
-				height / 6 + 48 + 12, 80, 20, button104[eo.getTameSkin()]));
+		GuiButton b1 = new GuiButton(102, width / 2 - 140, height / 6 + 0 + 12, 80, 20, button102[eo.isTamed() ? 0 : 1]) {
+    		@Override
+    		public void onClick(double mouseX, double moudeY){
+    			actionPerformed(this);
+    		}
+    	};
+
+		GuiButton b2 = new GuiButton(103, width / 2 - 140, height / 6 + 24 + 12,
+				80, 20, button103[eo.isSitting() ? 0 : 1]) {
+    		@Override
+    		public void onClick(double mouseX, double moudeY){
+    			actionPerformed(this);
+    		}
+    	};
+
+		GuiButton b3 = new GuiButton(104, width / 2 - 140, height / 6 + 48 + 12, 80, 20, button104[eo.getTameSkin()]) {
+    		@Override
+    		public void onClick(double mouseX, double moudeY){
+    			actionPerformed(this);
+    		}
+    	};
+
+    	buttons.add(b1);
+    	buttons.add(b2);
+    	buttons.add(b3);
+    	this.children.addAll(buttons);
 	}
 
 	@Override

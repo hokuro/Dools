@@ -17,8 +17,15 @@ public class GuiDoolPause_parrot extends GuiDoolPause {
 	@Override
 	public void initGui() {
 		super.initGui();
-		variant = entity.getVariant();
-		buttonList.add(new GuiButton(101, width / 2 - 140, height / 6 + 0 + 12, 80, 20, "Parrot "+variant));
+
+		GuiButton b1 = new GuiButton(101, width / 2 - 140, height / 6 + 0 + 12, 80, 20, "Parrot "+variant) {
+    		@Override
+    		public void onClick(double mouseX, double moudeY){
+    			actionPerformed(this);
+    		}
+    	};
+    	buttons.add(b1);
+    	this.children.addAll(buttons);
 	}
 
 	@Override

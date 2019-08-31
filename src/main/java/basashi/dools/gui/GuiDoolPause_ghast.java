@@ -17,8 +17,16 @@ public class GuiDoolPause_ghast extends GuiDoolPause {
 
 	public void initGui() {
 		super.initGui();
-		buttonList.add(new GuiButton(102, width / 2 - 140, height / 6 + 0 + 12, 80, 20,
-				button102[eg.isAttacking()? 0 : 1]));
+
+		GuiButton b1 = new GuiButton(102, width / 2 - 140, height / 6 + 0 + 12, 80, 20,
+				button102[eg.isAttacking()? 0 : 1]) {
+    		@Override
+    		public void onClick(double mouseX, double moudeY){
+    			actionPerformed(this);
+    		}
+    	};
+    	buttons.add(b1);
+    	this.children.addAll(buttons);
 	}
 
 	protected void actionPerformed(GuiButton guibutton) {

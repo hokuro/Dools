@@ -16,11 +16,14 @@ public class ServerDool_enderman extends ServerDool {
 			throws IOException {
 		super.sendData(pFigure, pData);
 		EntityEnderman lentity = (EntityEnderman)pFigure.renderEntity;
-		if (lentity.getHeldBlockState() == null){
+		//if (lentity.getHeldBlockState() == null){
+		if (lentity.func_195405_dq() == null){
 			pData.writeBoolean(false);
 		}else{
 			pData.writeBoolean(true);
-			pData.writeInt(Block.getIdFromBlock(lentity.getHeldBlockState().getBlock()));
+			//pData.writeInt(Block.getIdFromBlock(lentity.getHeldBlockState().getBlock()));
+			//pData.writeInt(IRegistry.field_212618_g.getId(lentity.func_195405_dq().getBlock()));
+			pData.writeInt(Block.getStateId(lentity.func_195405_dq()));
 		}
 		pData.writeBoolean(lentity.isScreaming());
 	}
@@ -31,7 +34,7 @@ public class ServerDool_enderman extends ServerDool {
 		super.reciveData(pFigure, pData);
 		EntityEnderman lentity = (EntityEnderman)pFigure.renderEntity;
 		if (pData.readBoolean()){
-			lentity.setHeldBlockState(Block.getStateById(pData.readInt()));
+			lentity.func_195406_b(Block.getStateById(pData.readInt()));
 		}
 		if (pData.readBoolean()){
 			lentity.setAttackTarget(lentity);
@@ -48,7 +51,7 @@ public class ServerDool_enderman extends ServerDool {
 			((EntityEnderman)pFigure.renderEntity).setAttackTarget(null);
 		}
 	}
-	
+
 	@Override
 	public void writeEntityToNBT(EntityDool pFigure, NBTTagCompound nbttagcompound) {
 		nbttagcompound.setBoolean("Attacking", ((EntityEnderman)pFigure.renderEntity).isScreaming());

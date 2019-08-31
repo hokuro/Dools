@@ -2,10 +2,10 @@ package basashi.dools.entity.render;
 
 import basashi.dools.entity.EntityDoolPlayer;
 import net.minecraft.client.renderer.entity.layers.LayerRenderer;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
-@SideOnly(Side.CLIENT)
+@OnlyIn(Dist.CLIENT)
 public class LayerDoolCape implements LayerRenderer<EntityDoolPlayer>
 {
     private final EntityPlayerRender playerRenderer;
@@ -15,7 +15,8 @@ public class LayerDoolCape implements LayerRenderer<EntityDoolPlayer>
         this.playerRenderer = playerRendererIn;
     }
 
-    public void doRenderLayer(EntityDoolPlayer entitylivingbaseIn, float p_177141_2_, float p_177141_3_, float partialTicks, float p_177141_5_, float p_177141_6_, float p_177141_7_, float scale)
+    @Override
+    public void render(EntityDoolPlayer entitylivingbaseIn, float p_177141_2_, float p_177141_3_, float partialTicks, float p_177141_5_, float p_177141_6_, float p_177141_7_, float scale)
     {
 //        if (!entitylivingbaseIn.isInvisible() && entitylivingbaseIn.isCape() && entitylivingbaseIn.getLocationCape() != null)
 //        {

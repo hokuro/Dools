@@ -18,8 +18,14 @@ public class GuiDoolPause_donkey extends GuiDoolPause {
 	@Override
 	public void initGui() {
 		super.initGui();
-		button101b = new GuiButton(101, width / 2 - 140, height / 6 + 0 + 12, 80, 20, entity.hasChest() ? button101[1]:button101[0]);
-		buttonList.add(button101b);
+		button101b = new GuiButton(101, width / 2 - 140, height / 6 + 0 + 12, 80, 20, entity.hasChest() ? button101[1]:button101[0]) {
+    		@Override
+    		public void onClick(double mouseX, double moudeY){
+    			actionPerformed(this);
+    		}
+    	};
+    	buttons.add(button101b);
+    	this.children.addAll(buttons);
 	}
 
 	@Override

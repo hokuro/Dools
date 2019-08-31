@@ -48,19 +48,45 @@ public class GuiDoolPause_horse extends GuiDoolPause {
 	@Override
 	public void initGui() {
 		super.initGui();
-		buttonList.remove(4);
-		buttonList.add(new GuiButton(102, width / 2 - 140, height / 6 + 0 + 12, 80, 20, ehorse.isHorseSaddled() ? strbutton102[1]:strbutton102[0]));
+		buttons.remove(4);
+		GuiButton b1 = new GuiButton(102, width / 2 - 140, height / 6 + 0 + 12, 80, 20, ehorse.isHorseSaddled() ? strbutton102[1]:strbutton102[0]){
+    		@Override
+    		public void onClick(double mouseX, double moudeY){
+    			actionPerformed(this);
+    		}
+    	};
 
 		armortype = Math.max(hoseTYpe.indexOf(ehorse.getHorseArmorType()),0);
-		buttonList.add(new GuiButton(103, width / 2 - 140, height / 6 + 0 + 12 + 20, 80, 20, hoseTYpe.get(armortype).name()));
+		GuiButton b2 = new GuiButton(103, width / 2 - 140, height / 6 + 0 + 12 + 20, 80, 20, hoseTYpe.get(armortype).name()){
+    		@Override
+    		public void onClick(double mouseX, double moudeY){
+    			actionPerformed(this);
+    		}
+    	};
 
 
 		int val = ehorse.getHorseVariant();
 		color1 = (val & 255) % 7;
 		color2 = ((val & 65280) >> 8)%5;
 
-		buttonList.add(new GuiButton(104, width / 2 - 140, height / 6 + 0 + 12 + 40, 80, 20, "Texture: "+color1));
-		buttonList.add(new GuiButton(105, width / 2 - 140, height / 6 + 0 + 12 + 60, 80, 20, "Mark: "+color2));
+		GuiButton b3 = new GuiButton(104, width / 2 - 140, height / 6 + 0 + 12 + 40, 80, 20, "Texture: "+color1){
+    		@Override
+    		public void onClick(double mouseX, double moudeY){
+    			actionPerformed(this);
+    		}
+    	};
+		GuiButton b4 = new GuiButton(105, width / 2 - 140, height / 6 + 0 + 12 + 60, 80, 20, "Mark: "+color2){
+    		@Override
+    		public void onClick(double mouseX, double moudeY){
+    			actionPerformed(this);
+    		}
+    	};
+
+    	buttons.add(b1);
+    	buttons.add(b2);
+    	buttons.add(b3);
+    	buttons.add(b4);
+    	this.children.addAll(buttons);
 
 	}
 

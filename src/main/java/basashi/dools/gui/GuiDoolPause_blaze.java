@@ -18,7 +18,15 @@ public class GuiDoolPause_blaze extends GuiDoolPause {
 	public void initGui() {
 		super.initGui();
 		// 実際のフィギュアが燃えないのでオミット
-		buttonList.add(new GuiButton(101, width / 2 - 140, height / 6 + 0 + 12, 80, 20, entity.isBurning() ? button101[1] : button101[0]));
+
+		GuiButton b1 = new GuiButton(101, width / 2 - 140, height / 6 + 0 + 12, 80, 20, entity.isBurning() ? button101[1] : button101[0]) {
+    		@Override
+    		public void onClick(double mouseX, double moudeY){
+    			actionPerformed(this);
+    		}
+    	};
+    	buttons.add(b1);
+    	this.children.addAll(buttons);
 	}
 
 	@Override

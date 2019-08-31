@@ -1,35 +1,33 @@
 package basashi.dools.gui;
 
-import basashi.dools.core.Dools;
 import basashi.dools.entity.EntityDool;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.passive.EntityLlama;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.EnumDyeColor;
 import net.minecraft.item.ItemStack;
-import net.minecraft.network.datasync.DataParameter;
+import net.minecraft.nbt.NBTTagCompound;
 
 public class GuiDoolPause_llama extends GuiDoolPause {
 	public EntityLlama entity;
 	public static final ItemStack[] colors = {
 			ItemStack.EMPTY,
-			new ItemStack(Blocks.CARPET,1,EnumDyeColor.BLACK.getDyeDamage()),
-			new ItemStack(Blocks.CARPET,1,EnumDyeColor.RED.getDyeDamage()),
-			new ItemStack(Blocks.CARPET,1,EnumDyeColor.GREEN.getDyeDamage()),
-			new ItemStack(Blocks.CARPET,1,EnumDyeColor.BROWN.getDyeDamage()),
-			new ItemStack(Blocks.CARPET,1,EnumDyeColor.BLUE.getDyeDamage()),
-			new ItemStack(Blocks.CARPET,1,EnumDyeColor.PURPLE.getDyeDamage()),
-			new ItemStack(Blocks.CARPET,1,EnumDyeColor.CYAN.getDyeDamage()),
-			new ItemStack(Blocks.CARPET,1,EnumDyeColor.SILVER.getDyeDamage()),
-			new ItemStack(Blocks.CARPET,1,EnumDyeColor.GRAY.getDyeDamage()),
-			new ItemStack(Blocks.CARPET,1,EnumDyeColor.PINK.getDyeDamage()),
-			new ItemStack(Blocks.CARPET,1,EnumDyeColor.LIME.getDyeDamage()),
-			new ItemStack(Blocks.CARPET,1,EnumDyeColor.YELLOW.getDyeDamage()),
-			new ItemStack(Blocks.CARPET,1,EnumDyeColor.LIGHT_BLUE.getDyeDamage()),
-			new ItemStack(Blocks.CARPET,1,EnumDyeColor.MAGENTA.getDyeDamage()),
-			new ItemStack(Blocks.CARPET,1,EnumDyeColor.ORANGE.getDyeDamage()),
-			new ItemStack(Blocks.CARPET,1,EnumDyeColor.WHITE.getDyeDamage())
-
+			new ItemStack(Blocks.WHITE_CARPET),
+			new ItemStack(Blocks.ORANGE_CARPET),
+			new ItemStack(Blocks.MAGENTA_CARPET),
+			new ItemStack(Blocks.LIGHT_BLUE_CARPET),
+			new ItemStack(Blocks.YELLOW_CARPET),
+			new ItemStack(Blocks.LIME_CARPET),
+			new ItemStack(Blocks.PINK_CARPET),
+			new ItemStack(Blocks.GRAY_CARPET),
+			new ItemStack(Blocks.LIGHT_GRAY_CARPET),
+			new ItemStack(Blocks.CYAN_CARPET),
+			new ItemStack(Blocks.PURPLE_CARPET),
+			new ItemStack(Blocks.BLUE_CARPET),
+			new ItemStack(Blocks.BROWN_CARPET),
+			new ItemStack(Blocks.GREEN_CARPET),
+			new ItemStack(Blocks.RED_CARPET),
+			new ItemStack(Blocks.BLACK_CARPET)
 	};
 	public String[] button101 ={"chest on","chest off"};
 	private int valiant = 0;
@@ -43,11 +41,36 @@ public class GuiDoolPause_llama extends GuiDoolPause {
 	@Override
 	public void initGui() {
 		super.initGui();
-		buttonList.add(new GuiButton(101, width / 2 - 140, height / 6 + 0 + 12, 80, 20, entity.hasChest() ? button101[1]:button101[0]));
-		buttonList.add(new GuiButton(102, width / 2 - 140, height / 6 + 0 + 12+20, 80, 20, "Color "+ entity.getVariant()));
+		GuiButton b1 = new GuiButton(101, width / 2 - 140, height / 6 + 0 + 12, 80, 20, entity.hasChest() ? button101[1]:button101[0]) {
+    		@Override
+    		public void onClick(double mouseX, double moudeY){
+    			actionPerformed(this);
+    		}
+    	};
+		GuiButton b2 = new GuiButton(102, width / 2 - 140, height / 6 + 0 + 12+20, 80, 20, "Color "+ entity.getVariant()){
+    		@Override
+    		public void onClick(double mouseX, double moudeY){
+    			actionPerformed(this);
+    		}
+    	};
 
-		color = entity.getDataManager().get((DataParameter<Integer>)Dools.getPrivateValue(EntityLlama.class, null, "DATA_COLOR_ID")).intValue()+1;
-		buttonList.add(new GuiButton(103, width / 2 - 140, height / 6 + 0 + 12+40, 100, 20, color==0?"None":colors[color].getDisplayName()));
+    	EnumDyeColor col = entity.getColor();
+    	if (col == null) {
+    		color = 0;
+    	}else {
+    		color = col.getId()+1;
+    	}
+		GuiButton b3 = new GuiButton(103, width / 2 - 140, height / 6 + 0 + 12+40, 100, 20, color==0?"None":colors[color].getDisplayName().getFormattedText()) {
+    		@Override
+    		public void onClick(double mouseX, double moudeY){
+    			actionPerformed(this);
+    		}
+    	};
+
+    	buttons.add(b1);
+    	buttons.add(b2);
+    	buttons.add(b3);
+    	this.children.addAll(buttons);
 	}
 
 	@Override
@@ -71,8 +94,25 @@ public class GuiDoolPause_llama extends GuiDoolPause {
 		case 103:
 			color++;
 			if (color >= colors.length){color = 0;}
-			entity.getDataManager().set((DataParameter<Integer>)Dools.getPrivateValue(EntityLlama.class, null, "DATA_COLOR_ID"),color-1);
-			guibutton.displayString = color==0?"None":colors[color].getDisplayName();
+
+			NBTTagCompound compound = new NBTTagCompound();
+			entity.writeAdditional(compound);
+			if (color == 0) {
+				compound.removeTag("DecorItem");
+			}else {
+				ItemStack stack = colors[color];
+				compound.setTag("DecorItem", stack.write(new NBTTagCompound()));
+			}
+			entity.readAdditional(compound);
+			//entity.getDataManager().set((DataParameter<Integer>)Dools.getPrivateValue(EntityLlama.class, null, "DATA_COLOR_ID"),color-1);
+
+	    	EnumDyeColor col = entity.getColor();
+	    	if (col == null) {
+	    		color = 0;
+	    	}else {
+	    		color = col.getId()+1;
+	    	}
+			guibutton.displayString = color==0?"None":colors[color].getDisplayName().getFormattedText();
 		}
 
 		super.actionPerformed(guibutton);

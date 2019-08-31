@@ -2,7 +2,7 @@ package basashi.dools.core;
 
 public final class ModCommon {
 	// デバッグモードかどうか
-	public static boolean isDebug = false;
+	public static boolean isDebug = true;
 
 	// モッドID
 	public static final String MOD_ID = "dools";
@@ -27,5 +27,5 @@ public final class ModCommon {
 
 	// コンフィグ カテゴリー general
 	public static final String MOD_CONFIG_CAT_GENELAL = "general";
-	public static final String MOD_CHANEL ="Mod_Channel_Dools";
+	public static final String MOD_CHANEL ="mod_channel_dools";
 }

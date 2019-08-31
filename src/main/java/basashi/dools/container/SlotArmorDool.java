@@ -25,12 +25,12 @@ public class SlotArmorDool extends Slot {
 		if (par1ItemStack.isEmpty()) return false;
 		Item litem = par1ItemStack.getItem();
 
-		par1ItemStack.getItem().isValidArmor(par1ItemStack, armorType, ((ContainerItemSelect)parent).openPlayer);
+		//par1ItemStack.getItem().isValidArmor(par1ItemStack, armorType, ((ContainerItemSelect)parent).openPlayer);
 
 		if (litem instanceof ItemArmor) {
-			return ((ItemArmor)litem).armorType == armorType;
+			return ((ItemArmor)litem).getEquipmentSlot() == armorType;
 		}
-		if (Block.getBlockFromItem(litem) == Blocks.PUMPKIN || litem == Items.SKULL) {
+		if (Block.getBlockFromItem(litem) == Blocks.PUMPKIN || litem == Items.CREEPER_HEAD || litem == Items.DRAGON_HEAD || litem == Items.PLAYER_HEAD || litem==Items.ZOMBIE_HEAD) {
 			return armorType == EntityEquipmentSlot.HEAD;
 		}
 		return false;

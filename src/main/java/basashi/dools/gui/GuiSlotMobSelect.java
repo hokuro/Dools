@@ -12,9 +12,9 @@ import net.minecraft.client.gui.GuiSlot;
 import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.entity.EntityList;
+import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.entity.EntityType;
 
 public class GuiSlotMobSelect extends GuiSlot {
 
@@ -36,11 +36,12 @@ public class GuiSlotMobSelect extends GuiSlot {
 	}
 
 	@Override
-	protected void elementClicked(int var1, boolean var2, int mouseX, int mouseY) {
+    protected boolean mouseClicked(int var1, int var2, double mouseX, double mouseY) {
 		String s = ownerGui.orderlist.get(var1); // ownerGui.entityMap.keySet().toArray()[var1].toString();
 		EntityLivingBase lel = (EntityLivingBase) ownerGui.entityMap.get(s);
-		ownerGui.clickSlot(var1, var2, s, lel);
+		ownerGui.clickSlot(var1, false, s, lel);
 		selected = var1;
+		return true;
 	}
 
 	@Override
@@ -81,7 +82,7 @@ public class GuiSlotMobSelect extends GuiSlot {
 			}
 			String s = st.get(entryID).toString();//ownerGui.entityMap.keySet().toArray()[entryID].toString();
 
-			String ts = EntityList.getTranslationName(new ResourceLocation(s));
+			String ts = I18n.format(EntityType.getById(s).getTranslationKey());
 			boolean lf = ownerGui.exclusionList.contains(s);
 			EntityLivingBase entityliving = lf ? null : (EntityLivingBase) ownerGui.entityMap.get(s);
 
@@ -106,8 +107,8 @@ public class GuiSlotMobSelect extends GuiSlot {
 			GL11.glTranslatef(lxp, pY + 30F, 50F + f1);
 			GL11.glScalef(-f1, f1, f1);
 			GL11.glRotatef(180F, 0.0F, 0.0F, 1.0F);
-			float f5 = lxp - mouseX;
-			float f6 = (float) ((pY + 30) - 10) - mouseY;
+			float f5 = lxp - mouseXIn;
+			float f6 = (float) ((pY + 30) - 10) - mouseYIn;
 			GL11.glRotatef(135F, 0.0F, 1.0F, 0.0F);
 			RenderHelper.enableStandardItemLighting();
 			GL11.glRotatef(-135F, 0.0F, 1.0F, 0.0F);
@@ -118,9 +119,9 @@ public class GuiSlotMobSelect extends GuiSlot {
 			entityliving.prevRotationYawHead = entityliving.rotationYawHead;
 			entityliving.rotationYawHead = entityliving.rotationYaw;
 			GL11.glTranslatef(0.0F, (float)entityliving.getYOffset(), 0.0F);
-			Minecraft.getMinecraft().getRenderManager().playerViewY = 180F;
+			Minecraft.getInstance().getRenderManager().playerViewY = 180F;
 			try {
-				Minecraft.getMinecraft().getRenderManager().renderEntity(entityliving, 0.0D, 0.0D, 0.0D, 0.0F, 1.0F, false);
+				Minecraft.getInstance().getRenderManager().renderEntity(entityliving, 0.0D, 0.0D, 0.0D, 0.0F, 1.0F, false);
 			} catch (Exception e) {
 				ownerGui.exclusionList.add(s);
 			}
@@ -128,9 +129,9 @@ public class GuiSlotMobSelect extends GuiSlot {
 			GL11.glPopMatrix();
 			RenderHelper.disableStandardItemLighting();
 			GL11.glDisable(GL12.GL_RESCALE_NORMAL);
-			OpenGlHelper.setActiveTexture(OpenGlHelper.lightmapTexUnit);
+			OpenGlHelper.glActiveTexture(OpenGlHelper.GL_TEXTURE1);
 			GL11.glDisable(GL11.GL_TEXTURE_2D);
-			OpenGlHelper.setActiveTexture(OpenGlHelper.defaultTexUnit);
+			OpenGlHelper.glActiveTexture(OpenGlHelper.GL_TEXTURE0);
 		}
 		catch(Exception eex){
 

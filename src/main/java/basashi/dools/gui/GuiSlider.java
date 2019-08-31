@@ -2,7 +2,6 @@ package basashi.dools.gui;
 
 import org.lwjgl.opengl.GL11;
 
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 
 public class GuiSlider extends GuiButton {
@@ -32,9 +31,10 @@ public class GuiSlider extends GuiButton {
 		return 0;
 	}
 
-	protected void mouseDragged(Minecraft minecraft, int i, int j) {
+	@Override
+	public boolean mouseDragged(double i, double j, int p_mouseDragged_5_, double p_mouseDragged_6_, double p_mouseDragged_8_) {
 		if (!visible) {
-			return;
+			return super.mouseDragged(i, j, p_mouseDragged_5_, p_mouseDragged_6_, p_mouseDragged_8_);
 		}
 		if (dragging) {
 			sliderValue = (float) (i - (x + 4)) / (float) (width - 8);
@@ -51,10 +51,12 @@ public class GuiSlider extends GuiButton {
 				y, 0, 66, 4, 20);
 		drawTexturedModalRect(x + (int) (sliderValue * (float) (width - 8)) + 4,
 				y, 196, 66, 4, 20);
+		return super.mouseDragged(i, j, p_mouseDragged_5_, p_mouseDragged_6_, p_mouseDragged_8_);
 	}
 
-	public boolean mousePressed(Minecraft minecraft, int i, int j) {
-		if (super.mousePressed(minecraft, i, j)) {
+	@Override
+	protected boolean isPressable(double i, double j) {
+		if (super.isPressable(i, j)) {
 			sliderValue = (float) (i - (x + 4)) / (float) (width - 8);
 			if (sliderValue < 0.0F) {
 				sliderValue = 0.0F;
@@ -70,8 +72,10 @@ public class GuiSlider extends GuiButton {
 		}
 	}
 
-	public void mouseReleased(int i, int j) {
+	@Override
+	public boolean mouseReleased(double mosuex, double mousey, int p_mouseReleased_5_) {
 		dragging = false;
+		return super.mouseReleased(mosuex, mousey, p_mouseReleased_5_);
 	}
 
 	public float getSliderValue() {

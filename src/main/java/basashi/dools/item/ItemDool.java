@@ -1,6 +1,5 @@
 package basashi.dools.item;
 
-import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -10,22 +9,22 @@ import java.util.TreeMap;
 import basashi.dools.core.Dools;
 import basashi.dools.core.log.ModLog;
 import basashi.dools.entity.EntityDool;
-import net.minecraft.client.renderer.block.model.ModelResourceLocation;
-import net.minecraft.creativetab.CreativeTabs;
+import net.minecraft.client.renderer.model.ModelResourceLocation;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.EntityType;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.ItemUseContext;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumActionResult;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.EnumHand;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.registry.IRegistry;
 import net.minecraft.world.World;
 
 public class ItemDool extends Item {
@@ -34,42 +33,36 @@ public class ItemDool extends Item {
 	public static EntityDool entDool;
 	public static ItemStack firstPerson;
 
-	public ItemDool(){
-		super();
-		maxStackSize = 16;
-		setHasSubtypes(true);
-		setMaxDamage(0);
-		setCreativeTab(Dools.tabsDool);
-		this.setRegistryName(NAME);
-		this.setUnlocalizedName(NAME);
+	public ItemDool(Item.Properties property){
+		super(property);
 	}
 
 	@Override
     //public boolean onItemUse(ItemStack stack, EntityPlayer playerIn, World worldIn, BlockPos pos, EnumFacing side, float hitX, float hitY, float hitZ){
-	public EnumActionResult onItemUse(EntityPlayer playerIn, World worldIn, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ){
+	public EnumActionResult onItemUse(ItemUseContext context) {
 		ModLog.log().debug("start");
-		if (worldIn.isAirBlock(pos.add(0, 1, 0)) || hitZ <= 0.5D){
+		if (context.getWorld().isAirBlock(context.getPos().add(0, 1, 0)) || context.getHitZ() <= 0.5D){
 			double x, y, z;
-			if (hitX == 1){
-				x = pos.getX() + hitX;
-				y = pos.getY() + hitY;
-				z = pos.getZ() + hitZ;
+			if (context.getHitX() == 1){
+				x = context.getPos().getX() + context.getHitX();
+				y = context.getPos().getY() + context.getHitY();
+				z = context.getPos().getZ() + context.getHitZ();
 			}else{
-				x = pos.getX() + 0.5D;
-				y = pos.getY() + 1.0D;
-				z = pos.getZ() + 0.5D;
+				x = context.getPos().getX() + 0.5D;
+				y = context.getPos().getY() + 1.0D;
+				z = context.getPos().getZ() + 0.5D;
 			}
-			ItemStack stack = playerIn.getHeldItem(hand);
-			float lyaw = (180F - playerIn.getRotationYawHead())%360F;
-			EntityLivingBase lelb = getEntityFromItemStack(stack);
-			if(stack.getItemDamage()>0){
-				ModLog.log().debug("id "+stack.getItemDamage());
-				if(!worldIn.isRemote){
+			ItemStack stack = context.getItem();
+			float lyaw = (180F - context.getPlayer().getRotationYawHead())%360F;
+			EntityLivingBase lelb = getEntityFromItemStack(stack, context.getWorld());
+			if(stack.getDamage()>0){
+				ModLog.log().debug("id "+stack.getDamage());
+				if(!context.getWorld().isRemote){
 					try{
-						EntityDool lc = new EntityDool(worldIn,stack.getItemDamage());
+						EntityDool lc = new EntityDool(context.getWorld(),stack.getTag().getString("DoolName"));
 						lc.setPositionAndRotation(x,y,z,lyaw, 0F);
-						worldIn.spawnEntity(lc);
-						worldIn.playSound(playerIn, new BlockPos(playerIn.posX,playerIn.posY,playerIn.posZ),
+						context.getWorld().spawnEntity(lc);
+						context.getWorld().playSound(context.getPlayer(), new BlockPos(context.getPlayer().posX,context.getPlayer().posY,context.getPlayer().posZ),
 								SoundEvents.BLOCK_STONE_PLACE, SoundCategory.BLOCKS ,0.5F, 0.4F / ((new Random()).nextFloat() * 0.4F + 0.8F));
 					}catch(Exception e){
 						e.printStackTrace();
@@ -77,11 +70,14 @@ public class ItemDool extends Item {
 				}
 			}else{
 				ModLog.log().debug("id 0");
-				if(worldIn.isRemote){
-					entDool.setWorld(worldIn);
-					entDool.setPositionAndRotation(x,y,z,lyaw,0F);
-					Dools.proxy.openGuiSelect(playerIn, worldIn);
+				if (entDool == null) {
+		            entDool = Dools.getEntityMob(null);
 				}
+				entDool.setWorld(context.getWorld());
+				entDool.setPositionAndRotation(x,y,z,lyaw,0F);
+		        if (!context.getWorld().isRemote) {
+		        	Dools.proxy.openGuiSelect(context.getPlayer(), context.getWorld());
+		        }
 			}
 			stack.shrink(1);
 		}
@@ -91,91 +87,67 @@ public class ItemDool extends Item {
 
 
 
-	@Override
-	public String getUnlocalizedName(ItemStack itemstack) {
-		if (itemstack.getItemDamage() != 0) {
-			return getItemStackDisplayName(itemstack);
-		}
-		return super.getUnlocalizedName();
-	}
-
-	@Override
-	public void getSubItems(CreativeTabs tab, NonNullList<ItemStack> subItems){
-		if (tab != this.getCreativeTab()){return;}
-	  	// Creativeタブに追加するアイテム
-		subItems.add(new ItemStack(Dools.dool, 1));
-
-		List<ModelResourceLocation> resource = new ArrayList<ModelResourceLocation>();
-		for (ResourceLocation res : EntityList.getEntityNameList()){
-			try{
-				Class cl = EntityList.getClass(res);
-				if (!Modifier.isAbstract(cl.getModifiers()) && EntityLivingBase.class.isAssignableFrom(cl)){
-					ItemStack stack = new ItemStack(Dools.dool, 1, EntityList.getID(cl));
-					subItems.add(stack);
-					Dools.instance.registerModel(stack);
-				}
-			}catch(Exception e){
-
-			}
-		}
-	}
-
 	/**
 	 * ItemStackに関連付けられているEntityを返す。<br>
 	 * 対象となるEntityが存在しない場合はItemDamageを０に設定し適当なEntityを返す。
 	 * @param pItemStack
 	 * @return
 	 */
-	public static EntityLivingBase getEntityFromItemStack(ItemStack pItemStack) {
-		Dools.proxy.initEntitys();
-		String ls = null;
-		for (ResourceLocation res : EntityList.getEntityNameList()){
-			if (EntityList.getClass(res) == EntityList.getClassFromID(pItemStack.getItemDamage())){
-					ls = res.toString();
-					break;
-			}
-		}
-		//String ls = EntityList.getStringFromID(pItemStack.getItemDamage());
-		if (ls == null || !entityStringMap.containsKey(ls)) {
-			if (pItemStack.hasTagCompound()) {
-				if (pItemStack.getTagCompound().hasKey("DoolName")) {
-					ls = pItemStack.getTagCompound().getString("DoolName");
-					if (entityStringMap.containsKey(ls)) {
-						EntityLivingBase le = (EntityLivingBase)entityStringMap.get(ls);
-						pItemStack.setItemDamage(EntityList.getID(le.getClass()));
-						return le;
+	public static EntityLivingBase getEntityFromItemStack(ItemStack pItemStack, World world) {
+		if (pItemStack.hasTag()) {
+			if (pItemStack.getTag().hasKey("DoolName")) {
+				String ls = pItemStack.getTag().getString("DoolName");
+				EntityType et = EntityType.getById(ls);
+				if (et != null ) {
+					Entity le = et.create(world);
+					if (le instanceof EntityLivingBase) {
+						pItemStack.setDamage(le.getEntityId());
+						return (EntityLivingBase)le;
 					}
 				}
 			}
-			pItemStack.setItemDamage(0);
-			return (EntityLivingBase)entityStringMap.values().iterator().next();
 		}
 
-		return (EntityLivingBase)entityStringMap.get(ls);
+		pItemStack.setDamage(0);
+		return EntityType.ZOMBIE.create(world);
 	}
 
 	@Override
-    public String getItemStackDisplayName(ItemStack stack)
-    {
-		String name = "Dool";
-		Class cl = EntityList.getClassFromID(stack.getMetadata());
-		for (ResourceLocation res : EntityList.getEntityNameList()){
-			if (EntityList.getClass(res) == cl){
-				name += "_"+EntityList.getTranslationName(res);
+	public void fillItemGroup(ItemGroup tab, NonNullList<ItemStack> subItems){
+		if (tab != this.getGroup()){return;}
+	  	// Creativeタブに追加するアイテム
+		subItems.add(new ItemStack(Dools.itemdool, 1));
+
+		List<ModelResourceLocation> resource = new ArrayList<ModelResourceLocation>();
+		IRegistry.field_212629_r.forEach((etype)->{
+			Class cls = etype.getEntityClass();
+			boolean lp = true;
+			while(lp) {
+				if (cls == EntityLivingBase.class) {
+					ItemStack stack = new ItemStack(Dools.itemdool,1);
+					NBTTagCompound nbt = stack.getOrCreateTag();
+					nbt.setString("DoolName", EntityType.getId(etype).toString());
+					subItems.add(stack);
+					lp = false;
+				}else if (cls == Entity.class || cls == null) {
+					lp = false;
+				}
+				cls = cls.getSuperclass();
 			}
-		}
+		});
+	}
 
-		Dools.instance.registerModel(stack);
-		return name;
-    }
-
-    /**
-     * Translates the unlocalized name of this item, but without the .name suffix, so the translation fails and the
-     * unlocalized name itself is returned.
-     */
 	@Override
-    public String getUnlocalizedNameInefficiently(ItemStack stack)
-    {
-		return getItemStackDisplayName(stack);
-    }
+	protected String getDefaultTranslationKey() {
+		return "Dool";
+	}
+
+	@Override
+	public String getTranslationKey(ItemStack stack) {
+		if (stack.hasTag() && stack.getTag().hasKey("DoolName")) {
+			String name = stack.getTag().getString("DoolName");
+			return "Dool_"+ new ResourceLocation(name).getPath();
+		}
+		return getDefaultTranslationKey();
+	}
 }

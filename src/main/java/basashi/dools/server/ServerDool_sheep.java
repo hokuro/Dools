@@ -8,6 +8,7 @@ import basashi.dools.entity.EntityDool;
 import basashi.dools.gui.GuiDoolPause_sheep;
 import net.minecraft.entity.passive.EntitySheep;
 import net.minecraft.item.EnumDyeColor;
+import net.minecraft.util.text.TextComponentTranslation;
 
 public class ServerDool_sheep extends ServerDool {
 
@@ -16,7 +17,7 @@ public class ServerDool_sheep extends ServerDool {
 			throws IOException {
 		super.sendData(pFigure, pData);
 		EntitySheep lentity = (EntitySheep)pFigure.renderEntity;
-		pData.writeByte(lentity.getFleeceColor().getMetadata());
+		pData.writeInt(lentity.getFleeceColor().getId());
 		pData.writeBoolean(lentity.getSheared());
 		pData.writeBoolean(lentity.hasCustomName());
 	}
@@ -26,12 +27,12 @@ public class ServerDool_sheep extends ServerDool {
 			throws IOException {
 		super.reciveData(pFigure, pData);
 		EntitySheep lentity = (EntitySheep)pFigure.renderEntity;
-		lentity.setFleeceColor((EnumDyeColor.byMetadata(pData.readByte())));
+		lentity.setFleeceColor((EnumDyeColor.values()[pData.readInt()]));
 		lentity.setSheared(pData.readBoolean());
 		if (pData.readBoolean()){
-			lentity.setCustomNameTag(GuiDoolPause_sheep.customname);
+			lentity.setCustomName(new TextComponentTranslation(GuiDoolPause_sheep.customname));
 		}else{
-			lentity.setCustomNameTag("");
+			lentity.setCustomName(new TextComponentTranslation(""));
 		}
 	}
 

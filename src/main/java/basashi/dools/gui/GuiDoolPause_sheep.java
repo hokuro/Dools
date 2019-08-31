@@ -4,6 +4,7 @@ import basashi.dools.entity.EntityDool;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.passive.EntitySheep;
 import net.minecraft.item.EnumDyeColor;
+import net.minecraft.util.text.TextComponentTranslation;
 
 public class GuiDoolPause_sheep extends GuiDoolPause {
 
@@ -19,12 +20,29 @@ public class GuiDoolPause_sheep extends GuiDoolPause {
 
 	public void initGui() {
 		super.initGui();
-		buttonList.add(new GuiButton(102, width / 2 - 140, height / 6 + 0 + 12, 80, 20,
-				button102[es.getSheared() ? 0 : 1]));
-		buttonList.add(new GuiButton(103, width / 2 - 140, height / 6 + 24 + 12, 80, 20,
-				es.getFleeceColor().name()));
-		buttonList.add(new GuiButton(104, width / 2 - 140, height / 6 + 48 + 12, 80, 20,
-				es.hasCustomName()?"None":customname));
+		GuiButton b1 = new GuiButton(102, width / 2 - 140, height / 6 + 0 + 12, 80, 20, button102[es.getSheared() ? 0 : 1]) {
+    		@Override
+    		public void onClick(double mouseX, double moudeY){
+    			actionPerformed(this);
+    		}
+    	};
+    	GuiButton b2 = new GuiButton(103, width / 2 - 140, height / 6 + 24 + 12, 80, 20, es.getFleeceColor().name()) {
+    		@Override
+    		public void onClick(double mouseX, double moudeY){
+    			actionPerformed(this);
+    		}
+    	};
+    	GuiButton b3 = new GuiButton(104, width / 2 - 140, height / 6 + 48 + 12, 80, 20, es.hasCustomName()?"None":customname) {
+    		@Override
+    		public void onClick(double mouseX, double moudeY){
+    			actionPerformed(this);
+    		}
+    	};
+
+    	buttons.add(b1);
+    	buttons.add(b2);
+    	buttons.add(b3);
+    	this.children.addAll(buttons);
 	}
 
 	protected void actionPerformed(GuiButton guibutton) {
@@ -49,9 +67,9 @@ public class GuiDoolPause_sheep extends GuiDoolPause {
 			break;
 		case 104:
 			if (es.hasCustomName()){
-				es.setCustomNameTag("");
+				es.setCustomName(new TextComponentTranslation(""));
 			}else{
-				es.setCustomNameTag(customname);
+				es.setCustomName(new TextComponentTranslation(customname));
 			}
 			guibutton.displayString = es.hasCustomName()?"None":customname;
 		}

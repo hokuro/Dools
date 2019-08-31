@@ -1,9 +1,6 @@
 package basashi.dools.gui;
 
 
-import java.io.IOException;
-
-import org.lwjgl.opengl.EXTRescaleNormal;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 
@@ -11,7 +8,7 @@ import basashi.dools.container.ContainerItemSelect;
 import basashi.dools.core.Dools;
 import basashi.dools.core.log.ModLog;
 import basashi.dools.entity.EntityDool;
-import basashi.dools.network.MessagePause;
+import basashi.dools.network.MessageHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
@@ -44,19 +41,15 @@ public class GuiDoolPause extends GuiScreen {
 	}
 
 	@Override
-	protected void keyTyped(char par1, int par2) {
-		if (par2 == 1) {
+	public boolean keyPressed(int p_keyPressed_1_, int p_keyPressed_2_, int p_keyPressed_3_) {
+		if (p_keyPressed_1_ == 256) {
 			// データをサーバーへ送る
-			Dools.INSTANCE.sendToServer(new MessagePause(Dools.getServerFigure(targetEntity).getData(targetEntity)));
+			MessageHandler.Send_MessagePause(Dools.getServerFigure(targetEntity).getData(targetEntity));
+			//Dools.INSTANCE.sendToServer(new MessagePause(Dools.getServerFigure(targetEntity).getData(targetEntity)));
 			ModLog.log().debug("DataSendToServer.");
 			Dools.getServerFigure(targetEntity).sendItems(targetEntity, true);
 		}
-		try {
-			super.keyTyped(par1, par2);
-		} catch (IOException e) {
-			// TODO 自動生成された catch ブロック
-			e.printStackTrace();
-		}
+		return super.keyPressed(p_keyPressed_1_, p_keyPressed_2_, p_keyPressed_3_);
 	}
 
 	@Override
@@ -65,7 +58,7 @@ public class GuiDoolPause extends GuiScreen {
 	}
 
 	@Override
-	public void drawScreen(int i, int j, float f) {
+	public void render(int i, int j, float f) {
 		drawDefaultBackground();
 		drawCenteredString(this.fontRenderer, screenTitle, width / 2, 20, 0xffffff);
 
@@ -80,7 +73,7 @@ public class GuiDoolPause extends GuiScreen {
 		}catch(Exception ex){
 			elt = (EntityLivingBase) targetEntity.renderEntity;
 		}
-		GL11.glEnable(EXTRescaleNormal.GL_RESCALE_NORMAL_EXT);
+		//GL11.glEnable(EXTRescaleNormal.GL_RESCALE_NORMAL_EXT);
 		GL11.glEnable(GL11.GL_COLOR_MATERIAL);
 		GL11.glPushMatrix();
 		GL11.glTranslatef(l, k + 30F, 50F);
@@ -101,9 +94,9 @@ public class GuiDoolPause extends GuiScreen {
 		elt.prevRotationYawHead = elt.rotationYaw;
 		Dools.getServerFigure(targetEntity).setRotation(targetEntity);
 		GL11.glTranslatef(0.0F, (float)elt.getYOffset(), 0.0F);
-		Minecraft.getMinecraft().getRenderManager().playerViewY = 180F;
+		Minecraft.getInstance().getRenderManager().playerViewY = 180F;
 		//Minecraft.getMinecraft().getRenderManager().renderEntityWithPosYaw(elt, 0.0D, 0.0D, 0.0D, 0.0F, 1.0F);
-		Minecraft.getMinecraft().getRenderManager().renderEntity(elt, 0.0D, 0.0D, 0.0D, 0.0F, 1.0F,false);
+		Minecraft.getInstance().getRenderManager().renderEntity(elt, 0.0D, 0.0D, 0.0D, 0.0F, 1.0F,false);
 		elt.renderYawOffset = f2;
 		elt.prevRotationYaw = elt.rotationYaw + f2;
 		elt.prevRotationPitch = elt.rotationPitch;
@@ -115,10 +108,10 @@ public class GuiDoolPause extends GuiScreen {
 		GL11.glPopMatrix();
 		RenderHelper.disableStandardItemLighting();
 		GL11.glDisable(GL12.GL_RESCALE_NORMAL);
-		OpenGlHelper.setActiveTexture(OpenGlHelper.lightmapTexUnit);
+		OpenGlHelper.glActiveTexture(OpenGlHelper.GL_TEXTURE1);
 		GL11.glDisable(GL11.GL_TEXTURE_2D);
-		OpenGlHelper.setActiveTexture(OpenGlHelper.defaultTexUnit);
-		super.drawScreen(i, j, f);
+		OpenGlHelper.glActiveTexture(OpenGlHelper.GL_TEXTURE0);
+		super.render(i, j, f);
 	}
 
 
@@ -131,26 +124,68 @@ public class GuiDoolPause extends GuiScreen {
 		}
 		GuiItemSelect.isChange = false;
 
-		buttonList.add(new GuiButton(10, width / 2 + 60, height / 6 + 48 + 12, 80, 20,
-				(button10[targetEntity.renderEntity.isRiding() ? 1 : 0])));
-		buttonList.add(new GuiButton(11, width / 2 + 60, height / 6 + 72 + 12, 80, 20,
-				(button11[targetEntity.renderEntity.isSneaking() ? 1 : 0])));
-		buttonList.add(new GuiButton(13, width / 2 + 60, height / 6 + 0 + 12, 60, 20,
-				(String.format("1 / %.0f", targetEntity.zoom))));
-		buttonList.add(new GuiButton(16, width / 2 + 120, height / 6 + 0 + 12, 20, 20,
-				(button16[targetEntity.renderEntity.isChild() ? 1 : 0])));
-		buttonList.add(new GuiButton(17, width / 2 - 140, height / 6 + 96 + 12, 80, 20,
-				("EquipSelect")));
-		figureYaw = new GuiSlider(15, width / 2 - 50, height / 6 + 96 + 12,
-				"", (targetEntity.additionalYaw + 180F) / 360F, 360F, -180F).setStrFormat("%s%.2f").setDisplayString();
-		buttonList.add(figureYaw);
+		GuiButton b1 = new GuiButton(10, width / 2 + 60, height / 6 + 48 + 12, 80, 20, (button10[targetEntity.renderEntity.isPassenger() ? 1 : 0])) {
+    		@Override
+    		public void onClick(double mouseX, double moudeY){
+    			actionPerformed(this);
+    		}
+    	};
+		GuiButton b2 = new GuiButton(11, width / 2 + 60, height / 6 + 72 + 12, 80, 20, (button11[targetEntity.renderEntity.isSneaking() ? 1 : 0])) {
+    		@Override
+    		public void onClick(double mouseX, double moudeY){
+    			actionPerformed(this);
+    		}
+    	};
+		GuiButton b3 = new GuiButton(13, width / 2 + 60, height / 6 + 0 + 12, 60, 20, (String.format("1 / %.0f", targetEntity.zoom))) {
+    		@Override
+    		public void onClick(double mouseX, double moudeY){
+    			actionPerformed(this);
+    		}
+    	};
+		GuiButton b4 = new GuiButton(16, width / 2 + 120, height / 6 + 0 + 12, 20, 20, (button16[targetEntity.renderEntity.isChild() ? 1 : 0])) {
+    		@Override
+    		public void onClick(double mouseX, double moudeY){
+    			actionPerformed(this);
+    		}
+    	};
+		GuiButton b5 = new GuiButton(17, width / 2 - 140, height / 6 + 96 + 12, 80, 20, ("EquipSelect")) {
+    		@Override
+    		public void onClick(double mouseX, double moudeY){
+    			actionPerformed(this);
+    		}
+    	};
+		figureYaw = new GuiSlider(15, width / 2 - 50, height / 6 + 96 + 12, "", (targetEntity.additionalYaw + 180F) / 360F, 360F, -180F).setStrFormat("%s%.2f").setDisplayString();
 
-		buttonList.add(new GuiButton(20, width / 2 + 80, height / 6 + 24 + 12,
-				40, 20, String.format("%.2f", targetEntity.fyOffset)));
-		buttonList.add(new GuiButton(21, width / 2 + 60, height / 6 + 24 + 12,
-				20, 20, ("+")));
-		buttonList.add(new GuiButton(22, width / 2 + 120, height / 6 + 24 + 12,
-				20, 20, ("-")));
+		GuiButton b6 = new GuiButton(20, width / 2 + 80, height / 6 + 24 + 12, 40, 20, String.format("%.2f", targetEntity.fyOffset)) {
+    		@Override
+    		public void onClick(double mouseX, double moudeY){
+    			actionPerformed(this);
+    		}
+    	};
+		GuiButton b7 = new GuiButton(21, width / 2 + 60, height / 6 + 24 + 12, 20, 20, ("+")) {
+    		@Override
+    		public void onClick(double mouseX, double moudeY){
+    			actionPerformed(this);
+    		}
+    	};
+		GuiButton b8 = new GuiButton(22, width / 2 + 120, height / 6 + 24 + 12, 20, 20, ("-")) {
+    		@Override
+    		public void onClick(double mouseX, double moudeY){
+    			actionPerformed(this);
+    		}
+    	};
+
+
+    	buttons.add(b1);
+    	buttons.add(b2);
+    	buttons.add(b3);
+    	buttons.add(b4);
+    	buttons.add(b5);
+    	buttons.add(figureYaw);
+    	buttons.add(b6);
+    	buttons.add(b7);
+    	buttons.add(b8);
+    	this.children.addAll(buttons);
 
 
 		//StringTranslate stringtranslate = StringTranslate.getInstance();
@@ -183,7 +218,6 @@ public class GuiDoolPause extends GuiScreen {
 	/**
 	 * GUIの操作をした時の処理
 	 */
-	@Override
 	protected void actionPerformed(GuiButton guibutton) {
 		if (!guibutton.enabled) {
 			return;
@@ -191,18 +225,18 @@ public class GuiDoolPause extends GuiScreen {
 		if (guibutton.id == 10) {
 			if (targetEntity.isFigureRide) {
 				// 載ってる
-				if (targetEntity.renderEntity.isRiding()){
-					targetEntity.renderEntity.dismountRidingEntity();
+				if (targetEntity.renderEntity.isPassenger()){
+					targetEntity.renderEntity.stopRiding();
 					guibutton.displayString = button10[0];
 				}
 			} else {
 				// 載ってない
-				if (!targetEntity.renderEntity.isRiding()){
+				if (!targetEntity.renderEntity.isPassenger()){
 					targetEntity.renderEntity.startRiding(targetEntity,true);
 					guibutton.displayString = button10[1];
 				}
 			}
-			targetEntity.isFigureRide = targetEntity.renderEntity.isRiding();
+			targetEntity.isFigureRide = targetEntity.renderEntity.isPassenger();
 		}
 		if (guibutton.id == 11) {
 			if (targetEntity.renderEntity.isSneaking()) {
@@ -260,8 +294,8 @@ public class GuiDoolPause extends GuiScreen {
 		if (guibutton.id == 22) {
 			targetEntity.fyOffset -= 0.05;
 		}
-		for (int k = 0; k < buttonList.size(); k++) {
-			GuiButton gb = (GuiButton) buttonList.get(k);
+		for (int k = 0; k < buttons.size(); k++) {
+			GuiButton gb = (GuiButton) buttons.get(k);
 			if (gb.id == 20) {
 				gb.displayString = String.format("%.2f", targetEntity.fyOffset);
 			}
@@ -320,7 +354,7 @@ public class GuiDoolPause extends GuiScreen {
 	public static void afterRender(EntityDool entityfigure) {
 		// キャラクターをレンダリングした後の特殊処理
 		// staticなので継承するわけではないから自分で作る。
-	
+
 	}
 
 }

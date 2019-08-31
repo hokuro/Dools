@@ -4,11 +4,10 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import basashi.dools.core.Dools;
 import basashi.dools.entity.EntityDool;
 import net.minecraft.entity.monster.EntityEvoker;
-import net.minecraft.entity.monster.EntitySpellcasterIllager;
 import net.minecraft.entity.monster.EntitySpellcasterIllager.SpellType;
+import net.minecraft.nbt.NBTTagCompound;
 
 public class ServerDool_evocation_illager extends ServerDool {
 	@Override
@@ -25,10 +24,18 @@ public class ServerDool_evocation_illager extends ServerDool {
 		EntityEvoker lentity = (EntityEvoker)pFigure.renderEntity;
 		if (pData.readBoolean()){
 			lentity.setSpellType(SpellType.DISAPPEAR);
-			Dools.setPrivateValue(EntitySpellcasterIllager.class, lentity, 10, "spellTicks");
+			NBTTagCompound tag = new NBTTagCompound();
+			lentity.writeAdditional(tag);
+			tag.setInt("SpellTicks",10);
+			lentity.readAdditional(tag);
+			//Dools.setPrivateValue(EntitySpellcasterIllager.class, lentity, 10, "spellTicks");
 		}else{
 			lentity.setSpellType(SpellType.NONE);
-			Dools.setPrivateValue(EntitySpellcasterIllager.class, lentity, 0, "spellTicks");
+			NBTTagCompound tag = new NBTTagCompound();
+			lentity.writeAdditional(tag);
+			tag.setInt("SpellTicks",0);
+			lentity.readAdditional(tag);
+			//Dools.setPrivateValue(EntitySpellcasterIllager.class, lentity, 0, "spellTicks");
 		}
 	}
 }

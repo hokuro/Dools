@@ -18,8 +18,23 @@ public class GuiDoolPause_wither extends GuiDoolPause {
 	@Override
 	public void initGui(){
 		super.initGui();
-		buttonList.add(new GuiButton(101, width/2-140, height/6 +12, 80, 20, wither.getInvulTime()==0?button101[0]:button101[1]));
-		buttonList.add(new GuiButton(102, width/2-140, height/6 +12 + 20, 80, 20, wither.isArmored()?button102[1]:button102[0]));
+		GuiButton b1 = new GuiButton(101, width/2-140, height/6 +12, 80, 20, wither.getInvulTime()==0?button101[0]:button101[1]) {
+    		@Override
+    		public void onClick(double mouseX, double moudeY){
+    			actionPerformed(this);
+    		}
+    	};
+		GuiButton b2 = new GuiButton(102, width/2-140, height/6 +12 + 20, 80, 20, wither.isArmored()?button102[1]:button102[0]) {
+    		@Override
+    		public void onClick(double mouseX, double moudeY){
+    			actionPerformed(this);
+    		}
+    	};
+
+
+    	buttons.add(b1);
+    	buttons.add(b2);
+    	this.children.addAll(buttons);
 	}
 
 	@Override

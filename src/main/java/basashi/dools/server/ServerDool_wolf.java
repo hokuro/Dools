@@ -21,7 +21,7 @@ public class ServerDool_wolf extends ServerDool {
 		int lf = (lentity.isTamed() ? 1 : 0) |
 				(lentity.isAngry() ? 2 : 0);
 		pData.writeByte(lf);
-		pData.writeInt(lentity.getCollarColor().getDyeDamage());
+		pData.writeInt(lentity.getCollarColor().getId());
 	}
 
 	@Override
@@ -34,7 +34,7 @@ public class ServerDool_wolf extends ServerDool {
 		int lf = pData.readByte();
 		lentity.setTamed((lf & 1) != 0);
 		lentity.setAngry((lf & 2) != 0);
-		lentity.setCollarColor(EnumDyeColor.byDyeDamage(pData.readInt()));
+		lentity.setCollarColor(EnumDyeColor.values()[pData.readInt()]);
 		if (lentity.isTamed()){
 			lentity.setOwnerId(new UUID(1,1));
 		}else{

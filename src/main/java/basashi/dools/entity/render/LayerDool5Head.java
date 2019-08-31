@@ -3,10 +3,10 @@ package basashi.dools.entity.render;
 import basashi.dools.entity.EntityDoolPlayer;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.entity.layers.LayerRenderer;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
-@SideOnly(Side.CLIENT)
+@OnlyIn(Dist.CLIENT)
 public class LayerDool5Head implements LayerRenderer<EntityDoolPlayer>
 {
     private final EntityPlayerRender playerRenderer;
@@ -16,7 +16,8 @@ public class LayerDool5Head implements LayerRenderer<EntityDoolPlayer>
         this.playerRenderer = playerRendererIn;
     }
 
-    public void doRenderLayer(EntityDoolPlayer entitylivingbaseIn, float p_177141_2_, float p_177141_3_, float partialTicks, float p_177141_5_, float p_177141_6_, float p_177141_7_, float scale)
+    @Override
+    public void render(EntityDoolPlayer entitylivingbaseIn, float p_177141_2_, float p_177141_3_, float partialTicks, float p_177141_5_, float p_177141_6_, float p_177141_7_, float scale)
     {
         if (entitylivingbaseIn.getName().equals("deadmau5") && !entitylivingbaseIn.isInvisible())
         {
@@ -27,14 +28,14 @@ public class LayerDool5Head implements LayerRenderer<EntityDoolPlayer>
                 float f = entitylivingbaseIn.prevRotationYaw + (entitylivingbaseIn.rotationYaw - entitylivingbaseIn.prevRotationYaw) * partialTicks - (entitylivingbaseIn.prevRenderYawOffset + (entitylivingbaseIn.renderYawOffset - entitylivingbaseIn.prevRenderYawOffset) * partialTicks);
                 float f1 = entitylivingbaseIn.prevRotationPitch + (entitylivingbaseIn.rotationPitch - entitylivingbaseIn.prevRotationPitch) * partialTicks;
                 GlStateManager.pushMatrix();
-                GlStateManager.rotate(f, 0.0F, 1.0F, 0.0F);
-                GlStateManager.rotate(f1, 1.0F, 0.0F, 0.0F);
-                GlStateManager.translate(0.375F * (float)(i * 2 - 1), 0.0F, 0.0F);
-                GlStateManager.translate(0.0F, -0.375F, 0.0F);
-                GlStateManager.rotate(-f1, 1.0F, 0.0F, 0.0F);
-                GlStateManager.rotate(-f, 0.0F, 1.0F, 0.0F);
+                GlStateManager.rotatef(f, 0.0F, 1.0F, 0.0F);
+                GlStateManager.rotatef(f1, 1.0F, 0.0F, 0.0F);
+                GlStateManager.translatef(0.375F * (float)(i * 2 - 1), 0.0F, 0.0F);
+                GlStateManager.translatef(0.0F, -0.375F, 0.0F);
+                GlStateManager.rotatef(-f1, 1.0F, 0.0F, 0.0F);
+                GlStateManager.rotatef(-f, 0.0F, 1.0F, 0.0F);
                 float f2 = 1.3333334F;
-                GlStateManager.scale(f2, f2, f2);
+                GlStateManager.scalef(f2, f2, f2);
                 this.playerRenderer.getMainModel().renderDeadmau5Head(0.0625F);
                 GlStateManager.popMatrix();
             }
@@ -45,4 +46,5 @@ public class LayerDool5Head implements LayerRenderer<EntityDoolPlayer>
     {
         return true;
     }
+
 }

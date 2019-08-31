@@ -3,91 +3,77 @@
  */
 package basashi.dools.network;
 
+import java.util.function.Supplier;
+
 import basashi.dools.container.ContainerItemSelect;
 import basashi.dools.core.Dools;
 import basashi.dools.entity.EntityDool;
 import basashi.dools.server.ServerDool;
-import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.Entity;
 import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.ItemStack;
+import net.minecraft.network.PacketBuffer;
 import net.minecraft.world.WorldServer;
-import net.minecraftforge.fml.common.network.ByteBufUtils;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
-import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
+import net.minecraftforge.fml.network.NetworkEvent;
 
 /**
  * @author as
  *
  */
-public class MessageItem implements IMessage, IMessageHandler<MessageItem, IMessage> {
+public class MessageItem {
 
 	private EntityEquipmentSlot slot;
 	private int slotIdx;
-	private EntityDool dool;
-
 	private int entityId;
 	private ItemStack item;
 
-	public MessageItem(){}
-	public MessageItem(int slot, EntityDool dool){
-		slotIdx = slot;
+	public MessageItem(int slotId, int entId, ItemStack stack) {
+		slotIdx = slotId;
+		entityId = entId;
+		item = stack;
 		this.slot = ContainerItemSelect.slotFromIndex.get(slotIdx);
-		this.dool = dool;
 	}
 
-	/* (非 Javadoc)
-	 * @see net.minecraftforge.fml.common.network.simpleimpl.IMessage#fromBytes(io.netty.buffer.ByteBuf)
-	 */
-	@Override
-	public void fromBytes(ByteBuf buf) {
-		int lslotid3 = 0;
-		ItemStack lis3 = ItemStack.EMPTY;
-		try {
-			entityId =buf.readInt();
-			slotIdx = buf.readByte();
-			slot = ContainerItemSelect.slotFromIndex.get(slotIdx);
-			item = ByteBufUtils.readItemStack(buf);
-		} catch (Exception e) {
-			e.printStackTrace();
+	public static void encode(MessageItem pkt, PacketBuffer buf)
+	{
+		buf.writeInt(pkt.slotIdx);
+		buf.writeInt(pkt.entityId);
+		buf.writeItemStack(pkt.item);
+	}
+
+	public static MessageItem decode(PacketBuffer buf)
+	{
+		int slotId = buf.readInt();
+		int entId = buf.readInt();
+		ItemStack stack = buf.readItemStack();
+		return new MessageItem(slotId, entId, stack);
+	}
+
+	public static class Handler
+	{
+		public static void handle(final MessageItem pkt, Supplier<NetworkEvent.Context> ctx)
+		{
+			ctx.get().enqueueWork(() -> {
+				try{
+					WorldServer lworld = (WorldServer) ctx.get().getSender().world;
+					Entity lentity = null;
+					EntityDool ldool = null;
+					ServerDool lserver = null;
+					int leid = 0;
+					lentity = lworld.getEntityByID(pkt.entityId);
+					if ( lentity instanceof EntityDool){
+						ldool = (EntityDool)lentity;
+						lserver = Dools.getServerFigure(ldool);
+					}
+					ldool.renderEntity.setItemStackToSlot(pkt.slot, pkt.item);
+					// クライアントへItemStackを送信
+					lserver.sendItem(pkt.slotIdx, ldool, false);
+				}catch(Exception ex){
+					ex.printStackTrace();
+				}
+			});
+			ctx.get().setPacketHandled(true);
 		}
-	}
-
-	/* (非 Javadoc)
-	 * @see net.minecraftforge.fml.common.network.simpleimpl.IMessage#toBytes(io.netty.buffer.ByteBuf)
-	 */
-	@Override
-	public void toBytes(ByteBuf buf) {
-		// TODO 自動生成されたメソッド・スタブ
-		ItemStack litemstack;
-		ContainerItemSelect.slotFromIndex.get(slotIdx);
-		litemstack = dool.renderEntity.getItemStackFromSlot(this.slot);
-		buf.writeInt(dool.getEntityId());
-		buf.writeByte(slotIdx);
-		ByteBufUtils.writeItemStack(buf,litemstack);
-	}
-
-	@Override
-	public IMessage onMessage(MessageItem message, MessageContext ctx) {
-		try{
-			WorldServer lworld = (WorldServer) ctx.getServerHandler().player.world;
-			Entity lentity = null;
-			EntityDool ldool = null;
-			ServerDool lserver = null;
-			int leid = 0;
-			lentity = lworld.getEntityByID(message.entityId);
-			if ( lentity instanceof EntityDool){
-				ldool = (EntityDool)lentity;
-				lserver = Dools.getServerFigure(ldool);
-			}
-			ldool.renderEntity.setItemStackToSlot(message.slot, message.item);
-			// クライアントへItemStackを送信
-			lserver.sendItem(message.slotIdx, ldool, false);
-		}catch(Exception ex){
-			ex.printStackTrace();
-		}
-		return null;
 	}
 
 }

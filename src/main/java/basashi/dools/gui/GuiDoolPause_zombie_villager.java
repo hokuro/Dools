@@ -3,19 +3,19 @@ package basashi.dools.gui;
 import java.util.ArrayList;
 import java.util.List;
 
-import basashi.dools.core.Dools;
 import basashi.dools.entity.EntityDool;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.monster.EntityZombieVillager;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.registry.RegistryNamespaced;
+import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import net.minecraftforge.fml.common.registry.VillagerRegistry;
 import net.minecraftforge.fml.common.registry.VillagerRegistry.VillagerProfession;
 
 public class GuiDoolPause_zombie_villager extends GuiDoolPause {
 	public EntityZombieVillager entity;
 
-	private static RegistryNamespaced<ResourceLocation, VillagerProfession> register = null;
+	private static RegistryNamespaced<VillagerProfession> register = null;
 	public static List<String> name = new ArrayList<String>();
 	public static List<Integer> id = new ArrayList<Integer>();
 	private int index = 0;
@@ -30,14 +30,22 @@ public class GuiDoolPause_zombie_villager extends GuiDoolPause {
 	public void initGui() {
 		super.initGui();
 		if (register == null){
-			register = Dools.getPrivateValue(VillagerRegistry.class, VillagerRegistry.instance(), "REGISTRY");
+			register = ObfuscationReflectionHelper.getPrivateValue(VillagerRegistry.class, VillagerRegistry.instance(), "REGISTRY");
 			for (ResourceLocation res : register.getKeys()){
-				id.add(register.getIDForObject(register.getObject(res)));
-				name.add(res.getResourcePath());
+				id.add(register.getId(register.get(res)));
+				name.add(res.getPath());
 			}
 		}
 		index = Math.max(id.indexOf(entity.getProfession()),0);
-		buttonList.add(new GuiButton(101, width / 2 - 140, height / 6 + 0 + 12, 80, 20, name.get(index)));
+
+		GuiButton b1 = new GuiButton(101, width / 2 - 140, height / 6 + 0 + 12, 80, 20, name.get(index)) {
+    		@Override
+    		public void onClick(double mouseX, double moudeY){
+    			actionPerformed(this);
+    		}
+    	};
+    	buttons.add(b1);
+    	this.children.addAll(buttons);
 	}
 
 	@Override

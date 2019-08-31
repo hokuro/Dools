@@ -29,10 +29,10 @@ public class GuiDoolPause_doolplayer extends GuiDoolPause {
 		efplayer = (EntityDoolPlayer) entityfigure.renderEntity;
 		playerList = new ArrayList<String>();
 		playerList.add("Default");
-		for (Object lo : Minecraft.getMinecraft().world.playerEntities) {
+		for (Object lo : Minecraft.getInstance().world.playerEntities) {
 			EntityPlayer lep = (EntityPlayer)lo;
-			if (lep.getName() != null && !lep.getName().isEmpty()) {
-				playerList.add(lep.getName());
+			if (lep.getName() != null && !lep.getName().getFormattedText().isEmpty()) {
+				playerList.add(lep.getName().getFormattedText());
 			}
 		}
 		if (efplayer.skinUser != null && !efplayer.skinUser.isEmpty()) {
@@ -51,15 +51,63 @@ public class GuiDoolPause_doolplayer extends GuiDoolPause {
 		super.initGui();
 		String ls = playerIndex == 0 ? playerList.get(0) : efplayer.skinUser;
 		String tx = button101[efplayer.isSlim()?1:0];
-		buttonList.add(new GuiButton(100, width / 2 - 140, height / 6 + 0 + 12, 80, 20, ls));
-		buttonList.add(new GuiButton(101, width / 2 + 60, height / 6 + 96 + 12, 80, 20, tx));
-
-		buttonList.add(new GuiButton(120, width / 2 - 180, height / 6 + 24 + 12, 60, 20, button120[efplayer.isHat?0:1]));
-		buttonList.add(new GuiButton(121, width / 2 - 180 + 60, height / 6 + 24 + 12, 60, 20, button121[efplayer.isJacket?0:1]));
-		buttonList.add(new GuiButton(122, width / 2 - 180, height / 6 + 48 + 12, 60, 20, button122[efplayer.isLeftLeg?0:1]));
-		buttonList.add(new GuiButton(123, width / 2 - 180 + 60, height / 6 + 48 + 12, 60, 20, button123[efplayer.isRightLeg?0:1]));
-		buttonList.add(new GuiButton(124, width / 2 - 180, height / 6 + 72 + 12, 60, 20, button124[efplayer.isLeftSleeve?0:1]));
-		buttonList.add(new GuiButton(125, width / 2 - 180 + 60, height / 6 + 72 + 12, 60, 20, button125[efplayer.isRightSleeve?0:1]));
+		GuiButton b1 = new GuiButton(100, width / 2 - 140, height / 6 + 0 + 12, 80, 20, ls) {
+    		@Override
+    		public void onClick(double mouseX, double moudeY){
+    			actionPerformed(this);
+    		}
+    	};
+		GuiButton b2 = new GuiButton(101, width / 2 + 60, height / 6 + 96 + 12, 80, 20, tx) {
+    		@Override
+    		public void onClick(double mouseX, double moudeY){
+    			actionPerformed(this);
+    		}
+    	};
+		GuiButton b3 = new GuiButton(120, width / 2 - 180, height / 6 + 24 + 12, 60, 20, button120[efplayer.isHat?0:1]) {
+    		@Override
+    		public void onClick(double mouseX, double moudeY){
+    			actionPerformed(this);
+    		}
+    	};
+		GuiButton b4 = new GuiButton(121, width / 2 - 180 + 60, height / 6 + 24 + 12, 60, 20, button121[efplayer.isJacket?0:1]) {
+    		@Override
+    		public void onClick(double mouseX, double moudeY){
+    			actionPerformed(this);
+    		}
+    	};
+		GuiButton b5 = new GuiButton(122, width / 2 - 180, height / 6 + 48 + 12, 60, 20, button122[efplayer.isLeftLeg?0:1]) {
+    		@Override
+    		public void onClick(double mouseX, double moudeY){
+    			actionPerformed(this);
+    		}
+    	};
+		GuiButton b6 = new GuiButton(123, width / 2 - 180 + 60, height / 6 + 48 + 12, 60, 20, button123[efplayer.isRightLeg?0:1]) {
+    		@Override
+    		public void onClick(double mouseX, double moudeY){
+    			actionPerformed(this);
+    		}
+    	};
+		GuiButton b7 = new GuiButton(124, width / 2 - 180, height / 6 + 72 + 12, 60, 20, button124[efplayer.isLeftSleeve?0:1]) {
+    		@Override
+    		public void onClick(double mouseX, double moudeY){
+    			actionPerformed(this);
+    		}
+    	};
+		GuiButton b8 = new GuiButton(125, width / 2 - 180 + 60, height / 6 + 72 + 12, 60, 20, button125[efplayer.isRightSleeve?0:1]) {
+    		@Override
+    		public void onClick(double mouseX, double moudeY){
+    			actionPerformed(this);
+    		}
+    	};
+    	buttons.add(b1);
+    	buttons.add(b2);
+    	buttons.add(b3);
+    	buttons.add(b4);
+    	buttons.add(b5);
+    	buttons.add(b6);
+    	buttons.add(b7);
+    	buttons.add(b8);
+    	this.children.addAll(buttons);
 	}
 
 	@Override
@@ -117,8 +165,8 @@ public class GuiDoolPause_doolplayer extends GuiDoolPause {
 		}
 	}
 	public static void afterRender(EntityDool entityfigure) {
-		
-	
+
+
 	}
 
 }

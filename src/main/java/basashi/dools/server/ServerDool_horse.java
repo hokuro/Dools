@@ -35,14 +35,14 @@ public class ServerDool_horse extends ServerDool {
 	public void readEntityFromNBT(EntityDool pFigure, NBTTagCompound nbttagcompound) {
 		EntityHorse lentity = (EntityHorse)pFigure.renderEntity;
 		lentity.setHorseSaddled(nbttagcompound.getBoolean("saddl"));
-		lentity.setHorseArmorStack(GuiDoolPause_horse.iarmor[nbttagcompound.getInteger("armor")]);
+		lentity.setHorseArmorStack(GuiDoolPause_horse.iarmor[nbttagcompound.getInt("armor")]);
 	}
 
 	@Override
 	public void writeEntityToNBT(EntityDool pFigure, NBTTagCompound nbttagcompound) {
 		EntityHorse lentity = (EntityHorse)pFigure.renderEntity;
 		nbttagcompound.setBoolean("saddl", lentity.isHorseSaddled());
-		nbttagcompound.setInteger("armor", Math.max(GuiDoolPause_horse.hoseTYpe.indexOf(lentity.getHorseArmorType()),0));
+		nbttagcompound.setInt("armor", Math.max(GuiDoolPause_horse.hoseTYpe.indexOf(lentity.getHorseArmorType()),0));
 
 	}
 

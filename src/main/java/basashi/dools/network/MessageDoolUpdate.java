@@ -1,16 +1,16 @@
 package basashi.dools.network;
 
+import java.util.function.Supplier;
+
 import basashi.dools.core.Dools;
 import basashi.dools.entity.EntityDool;
 import basashi.dools.server.ServerDool;
-import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.Entity;
+import net.minecraft.network.PacketBuffer;
 import net.minecraft.world.WorldServer;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
-import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
+import net.minecraftforge.fml.network.NetworkEvent;
 
-public class MessageDoolUpdate implements IMessageHandler<MessageDoolUpdate, IMessage>, IMessage {
+public class MessageDoolUpdate {
 	private int entityId;
 
 	public MessageDoolUpdate(){}
@@ -19,42 +19,44 @@ public class MessageDoolUpdate implements IMessageHandler<MessageDoolUpdate, IMe
 		this.entityId = entityId;
 	}
 
-
-	@Override
-	public void fromBytes(ByteBuf buf) {
-		// TODO 自動生成されたメソッド・スタブ
-		entityId = buf.readInt();
+	public static void encode(MessageDoolUpdate pkt, PacketBuffer buf)
+	{
+		buf.writeInt(pkt.entityId);
 	}
 
-	@Override
-	public void toBytes(ByteBuf buf) {
-		// TODO 自動生成されたメソッド・スタブ
-		buf.writeInt(entityId);
+	public static MessageDoolUpdate decode(PacketBuffer buf)
+	{
+		return new MessageDoolUpdate(buf.readInt());
 	}
 
-	@Override
-	public IMessage onMessage(MessageDoolUpdate message, MessageContext ctx) {
-		try{
-			WorldServer lworld = (WorldServer) ctx.getServerHandler().player.world;
-			Entity lentity = null;
-			EntityDool ldool = null;
-			ServerDool lserver = null;
-			int leid = 0;
+	public static class Handler
+	{
+		public static void handle(final MessageDoolUpdate pkt, Supplier<NetworkEvent.Context> ctx)
+		{
+			ctx.get().enqueueWork(() -> {
+				try{
+					WorldServer lworld = (WorldServer) ctx.get().getSender().world;
+					Entity lentity = null;
+					EntityDool ldool = null;
+					ServerDool lserver = null;
+					int leid = 0;
 
-			lentity = lworld.getEntityByID(message.entityId);
-			if ( lentity instanceof EntityDool){
-				ldool = (EntityDool)lentity;
-				lserver = Dools.getServerFigure(ldool);
-			}
+					lentity = lworld.getEntityByID(pkt.entityId);
+					if ( lentity instanceof EntityDool){
+						ldool = (EntityDool)lentity;
+						lserver = Dools.getServerFigure(ldool);
+					}
 
-			// クライアントから姿勢制御データ要求を受信
-			//ModLog.log().debug("RequestFromClient("+ldool.getEntityId()+":"+lserver.getClass().getSimpleName()+").");
-			Dools.INSTANCE.sendToAll(new MessagePause_Client(lserver.getData(ldool)));
-			lserver.sendItems(ldool, false);
-		}catch(Exception e){
-			e.printStackTrace();
+					// クライアントから姿勢制御データ要求を受信
+					MessageHandler.Send_MessagePause_Client(ctx.get().getSender(), lserver.getData(ldool));
+					//Dools.INSTANCE.sendToAll(new MessagePause_Client(lserver.getData(ldool)));
+					lserver.sendItems(ldool, false);
+				}catch(Exception e){
+					e.printStackTrace();
+				}
+			});
+			ctx.get().setPacketHandled(true);
 		}
-		return null;
 	}
 
 }

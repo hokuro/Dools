@@ -6,17 +6,15 @@ import java.util.Map;
 
 import basashi.dools.config.ConfigValue;
 import basashi.dools.core.Dools;
-import basashi.dools.item.ItemDool;
-import io.netty.buffer.ByteBuf;
-import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.EntityType;
 import net.minecraft.entity.MoverType;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTBase;
+import net.minecraft.nbt.INBTBase;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.network.PacketBuffer;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
@@ -28,6 +26,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
+import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import net.minecraftforge.fml.common.registry.IEntityAdditionalSpawnData;
 
 public class EntityDool extends Entity implements IEntityAdditionalSpawnData{
@@ -37,7 +36,7 @@ public class EntityDool extends Entity implements IEntityAdditionalSpawnData{
 	public EntityLivingBase renderEntity;
 	public float zoom;
 	public String mobString;
-	public int mobIndex;
+	//public int mobIndex;
 	private int health;
 	public Method afterrender;
 	public float additionalYaw;
@@ -47,12 +46,12 @@ public class EntityDool extends Entity implements IEntityAdditionalSpawnData{
 	public boolean isFigureRide = false;
 
 	public EntityDool(World worldIn) {
-		super(worldIn);
+		super(Dools.RegistryEvents.DOOL, worldIn);
 		health = 5;
 		additionalYaw = 0.0F;
 		changeCount = -1;
 		fyOffset = 0F;
-		zoom = ConfigValue.General.defaultZoomRate;
+		zoom = ConfigValue.general.DefaultZoomRate();
 		mobString = "";
 	}
 
@@ -60,14 +59,16 @@ public class EntityDool extends Entity implements IEntityAdditionalSpawnData{
 		this(world);
 
 		if (entity == null || !(entity instanceof EntityLivingBase)) {
-			entity = EntityList.createEntityByIDFromName(new ResourceLocation("Zombie"), world);
+			entity = EntityType.create(world, EntityType.ZOMBIE.getRegistryName());
 		}
 		setRenderEntity((EntityLivingBase) entity);
 		Dools.proxy.getGui(this);
+		this.mobString = entity.getType().getRegistryName().toString();
 	}
 
-	public EntityDool(World world, int index) {
-		this(world, EntityList.createEntityByID(index, world));
+	public EntityDool(World world, String registreKey) {
+		this(world, EntityType.getById(registreKey).create(world));
+		this.mobString = registreKey;
 	}
 
 	@Override
@@ -75,16 +76,15 @@ public class EntityDool extends Entity implements IEntityAdditionalSpawnData{
 		return false;
 	}
 
-
 	@Override
-	protected void entityInit() {
+	protected void registerData() {
 		//dataWatcher.addObject(5, (byte)-1);
 		this.dataManager.register(Watch0, (byte)-1);
 	}
 
 	@Override
 	public AxisAlignedBB getCollisionBox(Entity entity) {
-		return entity.getEntityBoundingBox();
+		return entity.getBoundingBox();
 	}
 
 	@Override
@@ -93,26 +93,24 @@ public class EntityDool extends Entity implements IEntityAdditionalSpawnData{
 	}
 
 	@Override
-	protected void readEntityFromNBT(NBTTagCompound tagCompund) {
+	protected void readAdditional(NBTTagCompound tagCompund) {
 		String s = tagCompund.getString("mobString");
 		zoom = tagCompund.getFloat("zoom");
 		health = tagCompund.getShort("Health");
 		additionalYaw = tagCompund.getFloat("additionalYaw");
 		if (s != null) {
-			Entity lentity = EntityList.createEntityByIDFromName(
-					new ResourceLocation(tagCompund.getString("mobString")), world);
+			Entity lentity = EntityType.getById(tagCompund.getString("mobString")).create(world);
 			if (lentity == null || !(lentity instanceof EntityLivingBase)) {
 				// 存在しないMOB
 				System.out.println(String.format("figua-lost:%s",
 						tagCompund.getString("mobString")));
-				Dools.proxy.initEntitys();
-				lentity = (Entity) ItemDool.entityStringMap.values().toArray()[0];
+				lentity = EntityType.create(world,EntityType.ZOMBIE.getRegistryName());
 			}
 			if (lentity instanceof EntityLivingBase) {
 				EntityLivingBase lel = (EntityLivingBase)lentity;
-				lel.readFromNBT(tagCompund.getCompoundTag("Entity"));
+				lel.readAdditional(tagCompund.getCompound("Entity"));
 				//lel.getDataWatcher().updateObject(0, tagCompund.getByte("DataWatcher0"));
-				lel.getDataManager().set((DataParameter<Byte>)Dools.getPrivateValue(Entity.class, null, "FLAGS"),tagCompund.getByte("DataWatcher0"));
+				lel.getDataManager().set((DataParameter<Byte>)ObfuscationReflectionHelper.getPrivateValue(Entity.class, null, "FLAGS"),tagCompund.getByte("DataWatcher0"));
 				lel.prevRotationPitch = tagCompund.getFloat("prevPitch");
 				lel.prevRotationYaw = tagCompund.getFloat("prevYaw");
 				lel.prevRotationYawHead = lel.rotationYawHead = lel.prevRotationYaw;
@@ -126,7 +124,7 @@ public class EntityDool extends Entity implements IEntityAdditionalSpawnData{
 	}
 
 	@Override
-	protected void writeEntityToNBT(NBTTagCompound tagCompound) {
+	protected void writeAdditional(NBTTagCompound tagCompound) {
 		if (mobString == null)
 			mobString = "";
 		tagCompound.setString("mobString", mobString);
@@ -135,16 +133,16 @@ public class EntityDool extends Entity implements IEntityAdditionalSpawnData{
 		tagCompound.setFloat("additionalYaw", additionalYaw);
 		NBTTagCompound lnbt = new NBTTagCompound();
 		if (renderEntity != null) {
-			renderEntity.writeToNBT(lnbt);
+			renderEntity.writeAdditional(lnbt);
 			//tagCompound.setByte("DataWatcher0", renderEntity.getDataWatcher().getWatchableObjectByte(0));
-			tagCompound.setByte("DataWatcher0", renderEntity.getDataManager().get((DataParameter<Byte>)Dools.getPrivateValue(Entity.class, null, "FLAGS")));
+			tagCompound.setByte("DataWatcher0", renderEntity.getDataManager().get((DataParameter<Byte>)ObfuscationReflectionHelper.getPrivateValue(Entity.class, null, "FLAGS")));
 			tagCompound.setFloat("prevPitch", renderEntity.prevRotationPitch);
 			tagCompound.setFloat("prevYaw", renderEntity.prevRotationYaw);
 			tagCompound.setFloat("yOffset", fyOffset);
 			tagCompound.setBoolean("isFigureRide", isFigureRide);
 			Dools.getServerFigure(this).writeEntityToNBT(this, tagCompound);
 		}
-		(( Map<String, NBTBase>)Dools.getPrivateValue(NBTTagCompound.class, tagCompound, "tagMap")).put("Entity", lnbt);
+		(( Map<String, INBTBase>)ObfuscationReflectionHelper.getPrivateValue(NBTTagCompound.class, tagCompound, "tagMap")).put("Entity", lnbt);
 	}
 
 	public boolean hasRenderEntity() {
@@ -154,28 +152,28 @@ public class EntityDool extends Entity implements IEntityAdditionalSpawnData{
 	@Override
 	public boolean attackEntityFrom(DamageSource damagesource, float i) {
 		Entity entity = damagesource.getTrueSource();
-		if (world.isRemote || isDead) {
+		if (world.isRemote || !this.isAlive()) {
 			return true;
 		}
 		markVelocityChanged();
 		if (entity instanceof EntityPlayer) {
-			if (this.isRiding()){this.dismountRidingEntity();}
-			ItemStack lis = new ItemStack(Dools.dool, 1, mobIndex);
-			if (!lis.hasTagCompound()) {
-				lis.setTagCompound(new NBTTagCompound());
+			if (this.isPassenger()){this.stopRiding();}
+			ItemStack lis = new ItemStack(Dools.itemdool);
+			if (!lis.hasTag()) {
+				lis.setTag(new NBTTagCompound());
 			}
-			NBTTagCompound lnbt = lis.getTagCompound();
-			lnbt.setString("FigureName", mobString);
+			NBTTagCompound lnbt = lis.getTag();
+			lnbt.setString("DoolName", mobString);
 
-			if (!lis.isEmpty()){
-				Dools.instance.registerModel(lis);
-			}
+//			if (!lis.isEmpty()){
+//				Dools.registerModel(lis);
+//			}
 			entityDropItem(lis, 0.0F);
-			setDead();
+			remove();
 		} else {
 			health -= i;
 			if (health <= 0) {
-				setDead();
+				remove();
 			}
 		}
 		return true;
@@ -183,7 +181,7 @@ public class EntityDool extends Entity implements IEntityAdditionalSpawnData{
 
 	@Override
 	public boolean canBeCollidedWith() {
-		return !isDead;
+		return this.isAlive();
 	}
 
 	@Override
@@ -193,8 +191,8 @@ public class EntityDool extends Entity implements IEntityAdditionalSpawnData{
 	}
 
 	@Override
-	public void onUpdate() {
-		super.onUpdate();
+	public void tick() {
+		super.tick();
 		if (!isFirst && world.isRemote) {
 			// サーバーへ固有データの要求をする
 			Dools.proxy.getDoolData(this);
@@ -215,7 +213,7 @@ public class EntityDool extends Entity implements IEntityAdditionalSpawnData{
 			motionY *= 0.5D;
 			motionZ *= 0.5D;
 		}
-		pushOutOfBlocks(posX, (this.getEntityBoundingBox().minY + this.getEntityBoundingBox().maxY) / 2D, posZ);
+		pushOutOfBlocks(posX, (this.getBoundingBox().minY + this.getBoundingBox().maxY) / 2D, posZ);
 		move(MoverType.PLAYER, motionX, motionY, motionZ);
 
 		// 速度減衰
@@ -225,7 +223,7 @@ public class EntityDool extends Entity implements IEntityAdditionalSpawnData{
 
 		// 当り判定
 		List list = world.getEntitiesWithinAABBExcludingEntity(this,
-				getEntityBoundingBox().expand(0.02D, 0.0D, 0.02D));
+				getBoundingBox().expand(0.02D, 0.0D, 0.02D));
 		if (list != null && list.size() > 0) {
 			for (int j1 = 0; j1 < list.size(); j1++) {
 				Entity entity = (Entity) list.get(j1);
@@ -235,7 +233,7 @@ public class EntityDool extends Entity implements IEntityAdditionalSpawnData{
 			}
 		}
 		if (renderEntity != null) {
-			setFlag(2, renderEntity.isRiding());
+			setFlag(2, renderEntity.isPassenger());
 			renderEntity.setPosition(posX, posY, posZ);
 			renderEntity.ticksExisted = this.ticksExisted;
 		}
@@ -244,16 +242,13 @@ public class EntityDool extends Entity implements IEntityAdditionalSpawnData{
 	@Override
 	//public boolean interactFirst(EntityPlayer entityplayer) {
 	public EnumActionResult applyPlayerInteraction(EntityPlayer player, Vec3d vec, EnumHand hand){
-		if (world.isRemote) {
-			// Client
-			Dools.proxy.openGuiPause(player, this, Minecraft.getMinecraft().world);
-		}
+		Dools.proxy.openGuiPause(player, this, this.world);
 		return EnumActionResult.SUCCESS;
 	}
 
 
 	@Override
-	public void writeSpawnData(ByteBuf buffer) {
+	public void writeSpawnData(PacketBuffer buffer) {
 		buffer.writeFloat(rotationYaw);
 		buffer.writeFloat(rotationPitch);
 		buffer.writeInt(mobString.getBytes().length);
@@ -261,13 +256,13 @@ public class EntityDool extends Entity implements IEntityAdditionalSpawnData{
 	}
 
 	@Override
-	public void readSpawnData(ByteBuf additionalData) {
+	public void readSpawnData(PacketBuffer additionalData) {
 		Entity lentity;
 		setRotation(additionalData.readFloat(), additionalData.readFloat());
 		int len = additionalData.readInt();
 		byte[] buf = new byte[len];
 		additionalData.readBytes(buf);
-		lentity = EntityList.createEntityByIDFromName(new ResourceLocation(new String(buf)), world);
+		lentity = EntityType.create(world,new ResourceLocation(new String(buf)));
 		setRenderEntity((EntityLivingBase) lentity);
 		Dools.proxy.getGui(this);
 	}
@@ -276,8 +271,8 @@ public class EntityDool extends Entity implements IEntityAdditionalSpawnData{
 		renderEntity = entity;
 		if (renderEntity != null) {
 			renderEntity.setWorld(world);
-			mobString = EntityList.getKey(renderEntity).toString();
-			mobIndex = EntityList.getID(renderEntity.getClass());
+			mobString = renderEntity.getType().getRegistryName().toString();
+			//mobIndex = EntityList.getID(renderEntity.getClass());
 			setZoom(zoom);
 		}
 	}

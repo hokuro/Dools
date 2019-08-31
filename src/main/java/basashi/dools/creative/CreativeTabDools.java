@@ -1,32 +1,18 @@
 package basashi.dools.creative;
 
 import basashi.dools.core.Dools;
-import net.minecraft.creativetab.CreativeTabs;
+import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
-public class CreativeTabDools extends CreativeTabs {
+public class CreativeTabDools extends ItemGroup {
 
 	public CreativeTabDools(String label){
 		super(label);
 	}
 
-	@SideOnly(Side.CLIENT)
-	public String getTranslatedTabLabel(){
-		return "Dools";
-	}
-
 	@Override
-	public ItemStack getTabIconItem() {
+	public ItemStack createIcon() {
 		// TODO 自動生成されたメソッド・スタブ
-		return new ItemStack(Dools.dool);
+		return new ItemStack(Dools.itemdool);
 	}
-
-	@SideOnly(Side.CLIENT)
-	public int getIconItemDamage(){
-		return 0;
-	}
-
-
 }

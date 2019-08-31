@@ -43,17 +43,17 @@ public class ContainerItemSelect extends Container {
 
 		for (var3 = 0; var3 < 5; ++var3) {
 			for (int var4 = 0; var4 < 9; ++var4) {
-				this.addSlotToContainer(new Slot(GuiItemSelect.inventory,
+				this.addSlot(new Slot(GuiItemSelect.inventory,
 						var3 * 9 + var4, 9 + var4 * 18, 18 + var3 * 18));
 			}
 		}
 
-		this.addSlotToContainer(new SlotArmorDool(this, GuiItemSelect.inventoryItem, slotFromType.get(EntityEquipmentSlot.HEAD), 9 + 0 * 18, 112, EntityEquipmentSlot.HEAD));
-		this.addSlotToContainer(new SlotArmorDool(this, GuiItemSelect.inventoryItem, slotFromType.get(EntityEquipmentSlot.CHEST), 9 + 1 * 18, 112, EntityEquipmentSlot.CHEST));
-		this.addSlotToContainer(new SlotArmorDool(this, GuiItemSelect.inventoryItem, slotFromType.get(EntityEquipmentSlot.LEGS), 9 + 2 * 18, 112, EntityEquipmentSlot.LEGS));
-		this.addSlotToContainer(new SlotArmorDool(this, GuiItemSelect.inventoryItem, slotFromType.get(EntityEquipmentSlot.FEET), 9 + 3 * 18, 112, EntityEquipmentSlot.FEET));
-		this.addSlotToContainer(new Slot(GuiItemSelect.inventoryItem, slotFromType.get(EntityEquipmentSlot.MAINHAND), 9+slotFromType.get(EntityEquipmentSlot.MAINHAND)*18,112));
-		this.addSlotToContainer(new Slot(GuiItemSelect.inventoryItem, slotFromType.get(EntityEquipmentSlot.OFFHAND), 9+slotFromType.get(EntityEquipmentSlot.OFFHAND)*18,112));
+		this.addSlot(new SlotArmorDool(this, GuiItemSelect.inventoryItem, slotFromType.get(EntityEquipmentSlot.HEAD), 9 + 0 * 18, 112, EntityEquipmentSlot.HEAD));
+		this.addSlot(new SlotArmorDool(this, GuiItemSelect.inventoryItem, slotFromType.get(EntityEquipmentSlot.CHEST), 9 + 1 * 18, 112, EntityEquipmentSlot.CHEST));
+		this.addSlot(new SlotArmorDool(this, GuiItemSelect.inventoryItem, slotFromType.get(EntityEquipmentSlot.LEGS), 9 + 2 * 18, 112, EntityEquipmentSlot.LEGS));
+		this.addSlot(new SlotArmorDool(this, GuiItemSelect.inventoryItem, slotFromType.get(EntityEquipmentSlot.FEET), 9 + 3 * 18, 112, EntityEquipmentSlot.FEET));
+		this.addSlot(new Slot(GuiItemSelect.inventoryItem, slotFromType.get(EntityEquipmentSlot.MAINHAND), 9+slotFromType.get(EntityEquipmentSlot.MAINHAND)*18,112));
+		this.addSlot(new Slot(GuiItemSelect.inventoryItem, slotFromType.get(EntityEquipmentSlot.OFFHAND), 9+slotFromType.get(EntityEquipmentSlot.OFFHAND)*18,112));
 //		for (var3 = 4; var3 < 9; ++var3) {
 //			this.addSlotToContainer(new Slot(GuiItemSelect.inventoryItem, var3, 9 + var3 * 18, 112));
 //		}

@@ -11,11 +11,11 @@ import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiSlot;
 import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.translation.I18n;
+import net.minecraft.util.registry.IRegistry;
 import net.minecraft.world.World;
 
 public abstract class GuiMobSelect extends GuiScreen {
@@ -39,21 +39,19 @@ public abstract class GuiMobSelect extends GuiScreen {
 		initEntitys(pWorld, true);
 	}
 
-	public GuiMobSelect(World pWorld, Map<String, Entity> pMap) {
-		entityMap = pMap;
-		initEntitys(pWorld, false);
-	}
+//	public GuiMobSelect(World pWorld, Map<String, Entity> pMap) {
+//		entityMap = pMap;
+//		initEntitys(pWorld, false);
+//	}
 
 
 	public void initEntitys(World world, boolean pForce) {
 		// 表示用EntityListの初期化
 		if (entityMapClass.isEmpty()) {
 			try {
-				for (ResourceLocation res:  EntityList.getEntityNameList()){
-					if (EntityList.getClass(res)!=null){
-						entityMapClass.put(EntityList.getClass(res),res.toString());
-					}
-				}
+				IRegistry.field_212629_r.forEach((etype)->{
+					entityMapClass.put(etype.getEntityClass(), etype.getRegistryName().toString());
+				});
 			}
 			catch (Exception e) {
 				ModLog.log().debug("EntityClassMap copy failed.");
@@ -84,13 +82,13 @@ public abstract class GuiMobSelect extends GuiScreen {
 
 	private void Order(String var){
 		if (orderlist.contains(var)){return;}
-		
-		String next = (new ResourceLocation(var)).getResourcePath();
+
+		String next = (new ResourceLocation(var)).getPath();
 		int insert = 0;
 		boolean bk = false;
 		for (int i = 0; i < orderlist.size();i++){
 			insert = i;
-			if ((new ResourceLocation(orderlist.get(i))).getResourcePath().compareTo(next) >=0 ){
+			if ((new ResourceLocation(orderlist.get(i))).getPath().compareTo(next) >=0 ){
 				bk = true;
 				break;
 			}
@@ -111,11 +109,11 @@ public abstract class GuiMobSelect extends GuiScreen {
 	@Override
 	public void initGui() {
 		selectPanel = new GuiSlotMobSelect(mc, this);
-		selectPanel.registerScrollButtons(3, 4);
+		this.children.add(selectPanel);
 	}
 
 	@Override
-	public void drawScreen(int px, int py, float pf) {
+	public void render(int px, int py, float pf) {
 //		float lhealthScale = BossStatus.healthScale;
 //		int lstatusBarLength = BossStatus.statusBarTime;
 //		String lbossName = BossStatus.bossName;
@@ -123,8 +121,8 @@ public abstract class GuiMobSelect extends GuiScreen {
 
 		drawDefaultBackground();
 		selectPanel.drawScreen(px, py, pf);
-		drawCenteredString(fontRenderObj(), I18n.translateToLocal(screenTitle), width / 2, 20, 0xffffff);
-		super.drawScreen(px, py, pf);
+		drawCenteredString(fontRenderObj(), I18n.format(screenTitle), width / 2, 20, 0xffffff);
+		super.render(px, py, pf);
 
 		// GUIで表示した分のボスのステータスを表示しない
 //		BossStatus.healthScale = lhealthScale;

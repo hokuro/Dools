@@ -1,8 +1,6 @@
 package basashi.dools.entity.render;
 
 import basashi.dools.entity.EntityDoolPlayer;
-import net.minecraft.client.model.ModelBiped.ArmPose;
-import net.minecraft.client.model.ModelPlayer;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.entity.RenderLivingBase;
 import net.minecraft.client.renderer.entity.RenderManager;
@@ -10,16 +8,18 @@ import net.minecraft.client.renderer.entity.layers.LayerArrow;
 import net.minecraft.client.renderer.entity.layers.LayerBipedArmor;
 import net.minecraft.client.renderer.entity.layers.LayerCustomHead;
 import net.minecraft.client.renderer.entity.layers.LayerHeldItem;
+import net.minecraft.client.renderer.entity.model.ModelBiped.ArmPose;
+import net.minecraft.client.renderer.entity.model.ModelPlayer;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.item.EnumAction;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.EnumHandSide;
 import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
-@SideOnly(Side.CLIENT)
+@OnlyIn(Dist.CLIENT)
 public class EntityPlayerRender extends RenderLivingBase<EntityDoolPlayer>
 {
     /** this field is used to indicate the 3-pixel wide arms */
@@ -110,7 +110,7 @@ public class EntityPlayerRender extends RenderLivingBase<EntityDoolPlayer>
             {
             	modelplayer.leftArmPose = ArmPose.ITEM;
                 modelplayer.rightArmPose = ArmPose.EMPTY;
-                EnumAction enumaction = itemstack.getItemUseAction();
+                EnumAction enumaction = itemstack.getUseAction();
                 if (enumaction == EnumAction.BLOCK)
                 {
                     modelplayer.leftArmPose = ArmPose.BLOCK;
@@ -142,13 +142,13 @@ public class EntityPlayerRender extends RenderLivingBase<EntityDoolPlayer>
     {
     	super.preRenderCallback(entitylivingbaseIn, partialTickTime);
         float f = 0.9375F;
-        GlStateManager.scale(f, f, f);
+        GlStateManager.scalef(f, f, f);
     }
 
     public void renderRightArm(EntityDoolPlayer clientPlayer)
     {
         float f = 1.0F;
-        GlStateManager.color(f, f, f);
+        GlStateManager.color3f(f, f, f);
         ModelPlayer modelplayer = this.getMainModel();
         this.setModelVisibilities(clientPlayer);
         modelplayer.swingProgress = 0.0F;
@@ -161,7 +161,7 @@ public class EntityPlayerRender extends RenderLivingBase<EntityDoolPlayer>
     public void renderLeftArm(EntityDoolPlayer clientPlayer)
     {
         float f = 1.0F;
-        GlStateManager.color(f, f, f);
+        GlStateManager.color3f(f, f, f);
         ModelPlayer modelplayer = this.getMainModel();
         this.setModelVisibilities(clientPlayer);
         modelplayer.isSneak = false;
