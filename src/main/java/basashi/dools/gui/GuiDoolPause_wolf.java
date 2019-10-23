@@ -3,131 +3,84 @@ package basashi.dools.gui;
 import java.util.UUID;
 
 import basashi.dools.entity.EntityDool;
-import net.minecraft.client.gui.GuiButton;
-import net.minecraft.entity.passive.EntityWolf;
-import net.minecraft.item.EnumDyeColor;
+import net.minecraft.client.gui.widget.button.Button;
+import net.minecraft.entity.passive.WolfEntity;
+import net.minecraft.item.DyeColor;
 
 public class GuiDoolPause_wolf extends GuiDoolPause {
 
-	private EntityWolf ew;
+	private WolfEntity entity;
 	private String button102[] = { "Contract", "Wild" };
 	private String button103[] = { "Sitting", "Standing" };
 	private String button104[] = { "Angry", "Calm" };
-
+	private Button health;
 	public GuiDoolPause_wolf(EntityDool entityfigure) {
 		super(entityfigure);
-		ew = (EntityWolf) targetEntity.renderEntity;
+		entity = (WolfEntity) targetEntity.renderEntity;
 	}
 
-	public void initGui() {
-		super.initGui();
-		GuiButton b1 = new GuiButton(105, width / 2 - 140, height / 6 + -24 + 12, 80, 20, ew.getCollarColor().getName()) {
-    		@Override
-    		public void onClick(double mouseX, double moudeY){
-    			actionPerformed(this);
-    		}
-    	};
-		GuiButton b2 = new GuiButton(102, width / 2 - 140, height / 6 + 0 + 12, 80, 20, button102[ew.isTamed() ? 0 : 1]) {
-    		@Override
-    		public void onClick(double mouseX, double moudeY){
-    			actionPerformed(this);
-    		}
-    	};
-		GuiButton b3 = new GuiButton(103, width / 2 - 140, height / 6 + 24 + 12, 80, 20, button103[ew.isSitting() ? 0 : 1]) {
-    		@Override
-    		public void onClick(double mouseX, double moudeY){
-    			actionPerformed(this);
-    		}
-    	};
-		GuiButton b4 = new GuiButton(104, width / 2 - 140, height / 6 + 48 + 12, 80, 20, button104[ew.isAngry() ? 0 : 1]) {
-    		@Override
-    		public void onClick(double mouseX, double moudeY){
-    			actionPerformed(this);
-    		}
-    	};
+	@Override
+	public void init() {
+		super.init();
+		this.addButton(new Button(width / 2 - 140, height / 6 + -24 + 12, 80, 20, entity.getCollarColor().getName(),(bt)->{actionPerformed(105, bt);}));
+		this.addButton(new Button(width / 2 - 140, height / 6 + 0 + 12, 80, 20, button102[entity.isTamed() ? 0 : 1],(bt)->{actionPerformed(102, bt);}));
+		this.addButton(new Button(width / 2 - 140, height / 6 + 24 + 12, 80, 20, button103[entity.isSitting() ? 0 : 1],(bt)->{actionPerformed(103, bt);}));
+		this.addButton(new Button(width / 2 - 140, height / 6 + 48 + 12, 80, 20, button104[entity.isAngry() ? 0 : 1],(bt)->{actionPerformed(104, bt);}));
 
-		GuiButton b5 = new GuiButton(150, width / 2 - 120, height / 6 + 72 + 12, 40, 20, String.format("%d", (int)ew.getHealth())) {
-    		@Override
-    		public void onClick(double mouseX, double moudeY){
-    			actionPerformed(this);
-    		}
-    	};
-		GuiButton b6 = new GuiButton(151, width / 2 - 140, height / 6 + 72 + 12, 20, 20, "+") {
-    		@Override
-    		public void onClick(double mouseX, double moudeY){
-    			actionPerformed(this);
-    		}
-    	};
-		GuiButton b7 = new GuiButton(152, width / 2 - 80, height / 6 + 72 + 12, 20, 20, "-") {
-    		@Override
-    		public void onClick(double mouseX, double moudeY){
-    			actionPerformed(this);
-    		}
-    	};
-
-    	buttons.add(b1);
-    	buttons.add(b2);
-    	buttons.add(b3);
-    	buttons.add(b4);
-    	buttons.add(b5);
-    	buttons.add(b6);
-    	buttons.add(b7);
-    	this.children.addAll(buttons);
+		this.addButton(health = new Button(width / 2 - 120, height / 6 + 72 + 12, 40, 20, String.format("%d", (int)entity.getHealth()),(bt)->{actionPerformed(150, bt);}));
+		this.addButton(new Button(width / 2 - 140, height / 6 + 72 + 12, 20, 20, "+",(bt)->{actionPerformed(151, bt);}));
+		this.addButton(new Button(width / 2 - 80, height / 6 + 72 + 12, 20, 20, "-",(bt)->{actionPerformed(152, bt);}));
 	}
 
-	protected void actionPerformed(GuiButton guibutton) {
-		super.actionPerformed(guibutton);
-
-		if (!guibutton.enabled) {
-			return;
-		}
-		switch (guibutton.id) {
+	@Override
+	protected void actionPerformed(int id, Button button) {
+		switch(id){
 		case 102:
-			boolean tame = ew.isTamed();
+			boolean tame = entity.isTamed();
 			if (tame){
-				ew.setOwnerId(null);
+				entity.setOwnerId(null);
 			}else{
-				ew.setOwnerId(new UUID(1,1));
+				entity.setOwnerId(new UUID(1,1));
 			}
-			ew.setTamed(!tame);
-			guibutton.displayString = button102[ew.isTamed() ? 0 : 1];
+			entity.setTamed(!tame);
+			button.setMessage(button102[entity.isTamed() ? 0 : 1]);
 			break;
 
 		case 103:
-			ew.setSitting(!ew.isSitting());
-			guibutton.displayString = button103[ew.isSitting() ? 0 : 1];
+			entity.setSitting(!entity.isSitting());
+			button.setMessage(button103[entity.isSitting() ? 0 : 1]);
 			break;
 
 		case 104:
-			ew.setAngry(!ew.isAngry());
-			guibutton.displayString = button104[ew.isAngry() ? 0 : 1];
+			entity.setAngry(!entity.isAngry());
+			button.setMessage(button104[entity.isAngry() ? 0 : 1]);
 			break;
 		case 105:
-			EnumDyeColor color = ew.getCollarColor();
-		    ew.setCollarColor(EnumDyeColor.byId(color.getId()+1));
-		    guibutton.displayString = ew.getCollarColor().getName();
+			DyeColor color = entity.getCollarColor();
+			entity.setCollarColor(DyeColor.byId(color.getId()+1));
+			button.setMessage(entity.getCollarColor().getName());
 		    break;
+
+		case 150:
+			entity.setHealth(10F);
+			button.setMessage(String.format("%d", (int)entity.getHealth()));
+			break;
+
 		}
 
-		float lhealth = ew.getHealth();
-		if (guibutton.id == 150) {
-			ew.setHealth(10F);
-		}
-		if (guibutton.id == 151) {
-			if (lhealth < ew.getMaxHealth())
-				ew.heal(1);
-		}
-		if (guibutton.id == 152) {
-			if (lhealth > 1)
-				ew.setHealth(lhealth-1);
-		}
-		for (int k = 0; k < buttons.size(); k++) {
-			GuiButton gb = (GuiButton) buttons.get(k);
-			if (gb.id == 150) {
-				gb.displayString = String.format("%d", (int)ew.getHealth());
+		float lhealth = entity.getHealth();
+		if (id == 151) {
+			if (lhealth < entity.getMaxHealth()) {
+				entity.heal(1);
+				health.setMessage(String.format("%d", (int)entity.getHealth()));
 			}
 		}
-
+		if (id == 152) {
+			if (lhealth > 1) {
+				entity.setHealth(lhealth-1);
+				health.setMessage(String.format("%d", (int)entity.getHealth()));
+			}
+		}
+		super.actionPerformed(id, button);
 	}
-
 }

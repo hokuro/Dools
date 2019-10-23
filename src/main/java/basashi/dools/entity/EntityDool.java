@@ -1,42 +1,45 @@
 package basashi.dools.entity;
 
 import java.lang.reflect.Method;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import basashi.dools.config.ConfigValue;
 import basashi.dools.core.Dools;
+import basashi.dools.core.log.ModLog;
+import basashi.dools.item.ItemDool;
+import basashi.dools.network.MessageHandler;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.EntitySize;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MoverType;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.INBTBase;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.INBT;
+import net.minecraft.network.IPacket;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.network.datasync.DataParameter;
-import net.minecraft.network.datasync.DataSerializers;
-import net.minecraft.network.datasync.EntityDataManager;
-//import net.minecraft.util.AxisAlignedBB;
+import net.minecraft.util.ActionResultType;
 import net.minecraft.util.DamageSource;
-import net.minecraft.util.EnumActionResult;
-import net.minecraft.util.EnumHand;
+import net.minecraft.util.Hand;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.registry.Registry;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import net.minecraftforge.fml.common.registry.IEntityAdditionalSpawnData;
+import net.minecraftforge.fml.network.FMLPlayMessages;
+import net.minecraftforge.fml.network.NetworkHooks;
 
 public class EntityDool extends Entity implements IEntityAdditionalSpawnData{
-    private static final DataParameter<Byte> Watch0 = EntityDataManager.<Byte>createKey(Entity.class, DataSerializers.BYTE);
-
-	public static final String NAEM = "entitydool";
-	public EntityLivingBase renderEntity;
+	public static final String NAME = "entitydool";
+	public LivingEntity renderEntity;
 	public float zoom;
 	public String mobString;
-	//public int mobIndex;
 	private int health;
 	public Method afterrender;
 	public float additionalYaw;
@@ -44,9 +47,14 @@ public class EntityDool extends Entity implements IEntityAdditionalSpawnData{
 	public float fyOffset;
 	protected boolean isFirst = false;
 	public boolean isFigureRide = false;
+	public boolean isMove = true;
 
 	public EntityDool(World worldIn) {
-		super(Dools.RegistryEvents.DOOL, worldIn);
+		this(Dools.RegistryEvents.DOOL, worldIn);
+	}
+
+	public EntityDool(EntityType<?> etype, World world) {
+		super(etype,world);
 		health = 5;
 		additionalYaw = 0.0F;
 		changeCount = -1;
@@ -55,20 +63,17 @@ public class EntityDool extends Entity implements IEntityAdditionalSpawnData{
 		mobString = "";
 	}
 
-	public EntityDool(World world, Entity entity) {
+	public EntityDool(FMLPlayMessages.SpawnEntity packet, World world) {
 		this(world);
-
-		if (entity == null || !(entity instanceof EntityLivingBase)) {
-			entity = EntityType.create(world, EntityType.ZOMBIE.getRegistryName());
-		}
-		setRenderEntity((EntityLivingBase) entity);
-		Dools.proxy.getGui(this);
-		this.mobString = entity.getType().getRegistryName().toString();
 	}
 
-	public EntityDool(World world, String registreKey) {
-		this(world, EntityType.getById(registreKey).create(world));
-		this.mobString = registreKey;
+	public EntityDool(World world, Entity entity) {
+		this(world);
+		if (entity == null || !(entity instanceof LivingEntity)) {
+			entity = EntityType.create(Registry.ENTITY_TYPE.getId(EntityType.ZOMBIE), world);
+		}
+		setRenderEntity((LivingEntity) entity);
+		this.mobString = entity.getType().getRegistryName().toString();
 	}
 
 	@Override
@@ -78,8 +83,6 @@ public class EntityDool extends Entity implements IEntityAdditionalSpawnData{
 
 	@Override
 	protected void registerData() {
-		//dataWatcher.addObject(5, (byte)-1);
-		this.dataManager.register(Watch0, (byte)-1);
 	}
 
 	@Override
@@ -93,56 +96,70 @@ public class EntityDool extends Entity implements IEntityAdditionalSpawnData{
 	}
 
 	@Override
-	protected void readAdditional(NBTTagCompound tagCompund) {
+	protected void readAdditional(CompoundNBT tagCompund) {
 		String s = tagCompund.getString("mobString");
 		zoom = tagCompund.getFloat("zoom");
 		health = tagCompund.getShort("Health");
 		additionalYaw = tagCompund.getFloat("additionalYaw");
+		isMove = tagCompund.getBoolean("isMove");
 		if (s != null) {
-			Entity lentity = EntityType.getById(tagCompund.getString("mobString")).create(world);
-			if (lentity == null || !(lentity instanceof EntityLivingBase)) {
-				// 存在しないMOB
-				System.out.println(String.format("figua-lost:%s",
-						tagCompund.getString("mobString")));
-				lentity = EntityType.create(world,EntityType.ZOMBIE.getRegistryName());
+			String nameKey = tagCompund.getString("mobString");
+			mobString = checkMobString(nameKey);
+			EntityType<?> etype = Registry.ENTITY_TYPE.getOrDefault(new ResourceLocation(mobString));
+			Entity lentity = etype.create(world);
+			if (lentity == null || !(lentity instanceof LivingEntity)) {
+				ModLog.log().info("missing create: " + mobString);
+				this.remove();
 			}
-			if (lentity instanceof EntityLivingBase) {
-				EntityLivingBase lel = (EntityLivingBase)lentity;
-				lel.readAdditional(tagCompund.getCompound("Entity"));
-				//lel.getDataWatcher().updateObject(0, tagCompund.getByte("DataWatcher0"));
-				lel.getDataManager().set((DataParameter<Byte>)ObfuscationReflectionHelper.getPrivateValue(Entity.class, null, "FLAGS"),tagCompund.getByte("DataWatcher0"));
-				lel.prevRotationPitch = tagCompund.getFloat("prevPitch");
-				lel.prevRotationYaw = tagCompund.getFloat("prevYaw");
-				lel.prevRotationYawHead = lel.rotationYawHead = lel.prevRotationYaw;
-				isFigureRide=tagCompund.getBoolean("isFigureRide");
-				setRenderEntity(lel);
-			}
+
+			LivingEntity lel = (LivingEntity)lentity;
+			lel.readAdditional(tagCompund.getCompound("Entity"));
+			lel.getDataManager().set((DataParameter<Byte>)ObfuscationReflectionHelper.getPrivateValue(Entity.class, null, "FLAGS"),tagCompund.getByte("DataWatcher0"));
+			lel.prevRotationPitch = tagCompund.getFloat("prevPitch");
+			lel.prevRotationYaw = tagCompund.getFloat("prevYaw");
+			lel.prevRotationYawHead = lel.rotationYawHead = lel.prevRotationYaw;
+			isFigureRide=tagCompund.getBoolean("isFigureRide");
+			setRenderEntity(lel);
+
 			fyOffset = tagCompund.getFloat("yOffset");
 			Dools.getServerFigure(this).readEntityFromNBT(this, tagCompund);
 			Dools.getServerFigure(this).setRotation(this);
 		}
 	}
 
+	private String checkMobString(String name) {
+		String ret = EntityType.ZOMBIE.getRegistryName().toString();
+		Iterator<EntityType<?>> it = Registry.ENTITY_TYPE.iterator();
+		while(it.hasNext()) {
+			EntityType<?> et = it.next();
+			if (et.getRegistryName().toString().equals(name)) {
+				ret = name;
+			}
+		}
+		return ret;
+	}
+
 	@Override
-	protected void writeAdditional(NBTTagCompound tagCompound) {
-		if (mobString == null)
-			mobString = "";
-		tagCompound.setString("mobString", mobString);
-		tagCompound.setFloat("zoom", zoom);
-		tagCompound.setShort("Health", (byte) health);
-		tagCompound.setFloat("additionalYaw", additionalYaw);
-		NBTTagCompound lnbt = new NBTTagCompound();
+	protected void writeAdditional(CompoundNBT tagCompound) {
+		if (mobString == null) {
+			mobString = EntityType.ZOMBIE.getRegistryName().toString();
+		}
+		tagCompound.putString("mobString", mobString);
+		tagCompound.putFloat("zoom", zoom);
+		tagCompound.putShort("Health", (byte) health);
+		tagCompound.putFloat("additionalYaw", additionalYaw);
+		tagCompound.putBoolean("isMove", this.isMove);
+		CompoundNBT lnbt = new CompoundNBT();
 		if (renderEntity != null) {
 			renderEntity.writeAdditional(lnbt);
-			//tagCompound.setByte("DataWatcher0", renderEntity.getDataWatcher().getWatchableObjectByte(0));
-			tagCompound.setByte("DataWatcher0", renderEntity.getDataManager().get((DataParameter<Byte>)ObfuscationReflectionHelper.getPrivateValue(Entity.class, null, "FLAGS")));
-			tagCompound.setFloat("prevPitch", renderEntity.prevRotationPitch);
-			tagCompound.setFloat("prevYaw", renderEntity.prevRotationYaw);
-			tagCompound.setFloat("yOffset", fyOffset);
-			tagCompound.setBoolean("isFigureRide", isFigureRide);
+			tagCompound.putByte("DataWatcher0", renderEntity.getDataManager().get((DataParameter<Byte>)ObfuscationReflectionHelper.getPrivateValue(Entity.class, null, "FLAGS")));
+			tagCompound.putFloat("prevPitch", renderEntity.prevRotationPitch);
+			tagCompound.putFloat("prevYaw", renderEntity.prevRotationYaw);
+			tagCompound.putFloat("yOffset", fyOffset);
+			tagCompound.putBoolean("isFigureRide", isFigureRide);
 			Dools.getServerFigure(this).writeEntityToNBT(this, tagCompound);
 		}
-		(( Map<String, INBTBase>)ObfuscationReflectionHelper.getPrivateValue(NBTTagCompound.class, tagCompound, "tagMap")).put("Entity", lnbt);
+		(( Map<String, INBT>)ObfuscationReflectionHelper.getPrivateValue(CompoundNBT.class, tagCompound, "tagMap")).put("Entity", lnbt);
 	}
 
 	public boolean hasRenderEntity() {
@@ -156,18 +173,12 @@ public class EntityDool extends Entity implements IEntityAdditionalSpawnData{
 			return true;
 		}
 		markVelocityChanged();
-		if (entity instanceof EntityPlayer) {
+		if (entity instanceof PlayerEntity) {
 			if (this.isPassenger()){this.stopRiding();}
-			ItemStack lis = new ItemStack(Dools.itemdool);
-			if (!lis.hasTag()) {
-				lis.setTag(new NBTTagCompound());
-			}
-			NBTTagCompound lnbt = lis.getTag();
-			lnbt.setString("DoolName", mobString);
+			ItemStack lis = new ItemStack(Dools.item_dool);
+			ItemDool.setLivingName(lis, this.mobString);
+			ItemDool.setLivingNBT(lis, this.renderEntity);
 
-//			if (!lis.isEmpty()){
-//				Dools.registerModel(lis);
-//			}
 			entityDropItem(lis, 0.0F);
 			remove();
 		} else {
@@ -193,37 +204,43 @@ public class EntityDool extends Entity implements IEntityAdditionalSpawnData{
 	@Override
 	public void tick() {
 		super.tick();
-		if (!isFirst && world.isRemote) {
-			// サーバーへ固有データの要求をする
-			Dools.proxy.getDoolData(this);
-			isFirst = true;
+		if (world.isRemote) {
+			if (!this.hasRenderEntity()) {
+			}else if (!isFirst) {
+				// iサーバーへ固有データの要求をする
+				MessageHandler.Send_MessageDoolUpdte(this.getEntityId());
+				isFirst = true;
+			}
 		}
 
 		prevPosX = posX;
 		prevPosY = posY;
 		prevPosZ = posZ;
+		double mx = this.getMotion().getX();
+		double my = this.getMotion().getY();
+		double mz = this.getMotion().getZ();
 
-		// 落下分
-		motionY -= 0.080000000000000002D;
-		motionY *= 0.98000001907348633D;
+		// i落下分
+		my -= 0.080000000000000002D;
+		my *= 0.98000001907348633D;
 
-		// 地上判定
+		// i地上判定
 		if (onGround) {
-			motionX *= 0.5D;
-			motionY *= 0.5D;
-			motionZ *= 0.5D;
+			mx *= 0.5D;
+			my *= 0.5D;
+			mz *= 0.5D;
 		}
 		pushOutOfBlocks(posX, (this.getBoundingBox().minY + this.getBoundingBox().maxY) / 2D, posZ);
-		move(MoverType.PLAYER, motionX, motionY, motionZ);
+		move(MoverType.PLAYER, new Vec3d(mx, my, mz));
 
-		// 速度減衰
-		motionX *= 0.99000000953674316D;
-		motionY *= 0.94999998807907104D;
-		motionZ *= 0.99000000953674316D;
+		// i速度減衰
+		mx *= 0.99000000953674316D;
+		my *= 0.94999998807907104D;
+		mz *= 0.99000000953674316D;
+		setMotion(mx,my,mz);
 
-		// 当り判定
-		List list = world.getEntitiesWithinAABBExcludingEntity(this,
-				getBoundingBox().expand(0.02D, 0.0D, 0.02D));
+		// i当り判定
+		List list = world.getEntitiesWithinAABBExcludingEntity(this, getBoundingBox().expand(0.02D, 0.0D, 0.02D));
 		if (list != null && list.size() > 0) {
 			for (int j1 = 0; j1 < list.size(); j1++) {
 				Entity entity = (Entity) list.get(j1);
@@ -235,15 +252,17 @@ public class EntityDool extends Entity implements IEntityAdditionalSpawnData{
 		if (renderEntity != null) {
 			setFlag(2, renderEntity.isPassenger());
 			renderEntity.setPosition(posX, posY, posZ);
-			renderEntity.ticksExisted = this.ticksExisted;
+			if (isMove) {
+				renderEntity.ticksExisted = this.ticksExisted;
+			}
 		}
 	}
 
 	@Override
-	//public boolean interactFirst(EntityPlayer entityplayer) {
-	public EnumActionResult applyPlayerInteraction(EntityPlayer player, Vec3d vec, EnumHand hand){
-		Dools.proxy.openGuiPause(player, this, this.world);
-		return EnumActionResult.SUCCESS;
+	public ActionResultType applyPlayerInteraction(PlayerEntity player, Vec3d vec, Hand hand){
+		Dools.proxy.openGuiPause(this);
+		//setZoom(ConfigValue.general.getNextZoomRate(zoom));
+		return ActionResultType.SUCCESS;
 	}
 
 
@@ -257,35 +276,38 @@ public class EntityDool extends Entity implements IEntityAdditionalSpawnData{
 
 	@Override
 	public void readSpawnData(PacketBuffer additionalData) {
-		Entity lentity;
 		setRotation(additionalData.readFloat(), additionalData.readFloat());
 		int len = additionalData.readInt();
 		byte[] buf = new byte[len];
 		additionalData.readBytes(buf);
-		lentity = EntityType.create(world,new ResourceLocation(new String(buf)));
-		setRenderEntity((EntityLivingBase) lentity);
-		Dools.proxy.getGui(this);
+		String nameKey = new String(buf);
+		mobString = checkMobString(nameKey);
+
+		Entity lentity = Registry.ENTITY_TYPE.getOrDefault(new ResourceLocation(mobString)).create(world);
+		if (lentity == null || !(lentity instanceof LivingEntity)) {
+			ModLog.log().info("missing create: " + mobString);
+			this.remove();
+		}
+		setRenderEntity((LivingEntity) lentity);;
 	}
 
-	public void setRenderEntity(EntityLivingBase entity) {
+	public void setRenderEntity(LivingEntity entity) {
 		renderEntity = entity;
 		if (renderEntity != null) {
 			renderEntity.setWorld(world);
 			mobString = renderEntity.getType().getRegistryName().toString();
-			//mobIndex = EntityList.getID(renderEntity.getClass());
 			setZoom(zoom);
 		}
 	}
-
 
 	public void setZoom(float z) {
 		if (z == 0) {
 			z = 4F;
 		}
 		zoom = z;
-		width = renderEntity.width / zoom;
-		height = renderEntity.height / zoom;
-		setSize(width, height);
+		float width = renderEntity.getWidth() / zoom;
+		float height = renderEntity.getHeight() / zoom;
+		ObfuscationReflectionHelper.setPrivateValue(Entity.class, this, EntitySize.flexible(width, height), "size");
 		setPosition(posX, posY, posZ);
 		renderEntity.setRenderDistanceWeight(zoom);
 	}
@@ -302,5 +324,8 @@ public class EntityDool extends Entity implements IEntityAdditionalSpawnData{
 
 	}
 
-
+	@Override
+	public IPacket<?> createSpawnPacket() {
+		return NetworkHooks.getEntitySpawningPacket(this);
+	}
 }

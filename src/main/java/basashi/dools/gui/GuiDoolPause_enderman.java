@@ -1,170 +1,106 @@
 package basashi.dools.gui;
 
-import java.util.Set;
-
-import com.google.common.collect.Sets;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 import basashi.dools.entity.EntityDool;
 import net.minecraft.block.Block;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.client.gui.GuiButton;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.monster.EntityEnderman;
-import net.minecraft.init.Blocks;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
+import net.minecraft.client.gui.widget.button.Button;
+import net.minecraft.client.resources.I18n;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.monster.EndermanEntity;
 import net.minecraft.tags.BlockTags;
-import net.minecraft.util.registry.IRegistry;
+import net.minecraft.util.registry.Registry;
 
 public class GuiDoolPause_enderman extends GuiDoolPause {
 
-	private EntityEnderman eenderman;
+	private EndermanEntity entity;
 	private int carringid;
-	private GuiButton bt150;
+	private Button bt150;
 	private String button102[] = { "Attack", "Nomal" };
 	private String button103[] = { "Carried", "Free" };
-	private Set<IBlockState> canpic;
+	private List<BlockState> canpic;
 
+	public GuiDoolPause_enderman(EntityDool entityfigure) {
+		super(entityfigure);
+		entity = (EndermanEntity) targetEntity.renderEntity;
+	}
 
-	public GuiDoolPause_enderman(EntityDool entityfigua) {
-		super(entityfigua);
-		eenderman = (EntityEnderman) targetEntity.renderEntity;
-
-		canpic = Sets.<IBlockState>newIdentityHashSet();
-		IRegistry.field_212618_g.forEach((blk)->{
+	@Override
+	public void init() {
+		super.init();
+		// iエンダーマンが持ってるブロックのIDを取り出す(1.13.2で関数名が不定になっている)
+		carringid = -1;
+		BlockState carryState = entity.getHeldBlockState();
+		canpic = new ArrayList<BlockState>();
+		int workIndex = 0;
+		Iterator<Block> it = Registry.BLOCK.iterator();
+		while(it.hasNext()) {
+			Block blk = it.next();
 			if (blk.isIn(BlockTags.ENDERMAN_HOLDABLE)) {
 				canpic.add(blk.getDefaultState());
+				if (carryState != null && carryState.getBlock() == blk) {
+					carringid = workIndex;
+				}
+				workIndex++;
 			}
-		});
+		}
+		this.addButton(new Button(width / 2 - 140, height / 6 + 0 + 12, 80, 20, button102[entity.isScreaming() ? 0 : 1], (bt)->{actionPerformed(102, bt);}));
+    	this.addButton(new Button(width / 2 - 140, height / 6 + 24 + 12, 80, 20, button103[carringid < 0 ? 0 : 1], (bt)->{actionPerformed(103, bt);}));
+		bt150 = new Button(width / 2 - 120, height / 6 + 48 + 12, 40, 20, String.format("%d", carringid), (bt)->{actionPerformed(150, bt);});
+    	this.addButton(bt150);
+		this.addButton(new Button(width / 2 - 140, height / 6 + 48 + 12, 20, 20, "+", (bt)->{actionPerformed(151, bt);}));
+		this.addButton(new Button(width / 2 - 80, height / 6 + 48 + 12, 20, 20, "-", (bt)->{actionPerformed(152, bt);}));
 	}
 
-	public void initGui() {
-		super.initGui();
+	@Override
+	protected void actionPerformed(int id, Button button) {
 
-		// エンダーマンが持ってるブロックのIDを取り出す(1.13.2で関数名が不定になっている)
-		int wcarringid =  Block.getStateId(eenderman.func_195405_dq()==null?Blocks.AIR.getDefaultState():eenderman.func_195405_dq());
-		if (wcarringid == 0) {
-			carringid = 2;
-		}else{
-			carringid = wcarringid;
+		switch(id) {
+		case 150:
+			carringid = -1;
+			break;
+		case 151:
+			carringid++;
+			if (canpic.size() <= carringid) {carringid = -1;}
+			break;
+
 		}
-		GuiButton b1 = new GuiButton(102, width / 2 - 140,
-				height / 6 + 0 + 12, 80, 20,
-				button102[eenderman.isScreaming() ? 0 : 1]){
-    		@Override
-    		public void onClick(double mouseX, double moudeY){
-    			actionPerformed(this);
-    		}
-    	};
-    	GuiButton b2 = new GuiButton(103, width / 2 - 140,
-				height / 6 + 24 + 12, 80, 20,
-				button103[wcarringid == 0 ? 0 : 1]){
-    		@Override
-    		public void onClick(double mouseX, double moudeY){
-    			actionPerformed(this);
-    		}
-    	};
-
-		bt150 = new GuiButton(150, width / 2 - 120, height / 6 + 48 + 12, 40,
-				20, String.format("%d", carringid)){
-		    		@Override
-		    		public void onClick(double mouseX, double moudeY){
-		    			actionPerformed(this);
-		    		}
-		    	};
-	    GuiButton b3 = new GuiButton(151, width / 2 - 140,
-				height / 6 + 48 + 12, 20, 20, "+"){
-    		@Override
-    		public void onClick(double mouseX, double moudeY){
-    			actionPerformed(this);
-    		}
-    	};
-    	GuiButton b4 = new GuiButton(152, width / 2 - 80,
-				height / 6 + 48 + 12, 20, 20, "-"){
-    		@Override
-    		public void onClick(double mouseX, double moudeY){
-    			actionPerformed(this);
-    		}
-    	};
-
-    	buttons.add(b1);
-    	buttons.add(b2);
-    	buttons.add(bt150);
-    	buttons.add(b3);
-    	buttons.add(b4);
-    	this.children.addAll(buttons);
-
-	}
-
-	protected void actionPerformed(GuiButton guibutton) {
-		super.actionPerformed(guibutton);
-
-		if (!guibutton.enabled) {
-			return;
-		}
-		if (guibutton.id == 150) {
-			carringid = 2;
-		}
-		if (guibutton.id == 151) {
-			try {
-				int i = (carringid + 1);
-				while (i != carringid) {
-					if (canpic.contains(Block.getStateById(i))) {
-						carringid = i;
-						break;
-					}
-					i = (i + 1) ;
-					if (i == Integer.MAX_VALUE) {
-						i = 0;
-					}
-				}
-			} catch (Exception exception) {
-			}
-		}
-		if (guibutton.id == 152) {
-			try {
-				int i = (carringid - 1);
-				while (i != carringid) {
-					if (canpic.contains(Block.getStateById(i))) {
-						carringid = i;
-						break;
-					}
-					i = (i - 1);
-					if (i < 0) {
-						i = Integer.MAX_VALUE;
-					}
-				}
-			} catch (Exception exception) {
-			}
-		}
-		switch (guibutton.id) {
+		switch (id) {
 		case 102:
-			EntityLivingBase et = null;
-			if (!eenderman.isScreaming()){et=eenderman;}
-			eenderman.setAttackTarget(et);
-			guibutton.displayString = button102[eenderman.isScreaming() ? 0 : 1];
+			LivingEntity et = null;
+			if (!entity.isScreaming()){et=entity;}
+			entity.setAttackTarget(et);
+			button.setMessage(button102[entity.isScreaming() ? 0 : 1]);
 			break;
 
 		case 103:
-			if (eenderman.func_195405_dq() != null){
-				eenderman.func_195406_b(Blocks.AIR.getDefaultState());
-				guibutton.displayString = button103[1];
+			if (entity.getHeldBlockState() != null){
+				entity.func_195406_b(Blocks.AIR.getDefaultState());
+				button.setMessage(button103[1]);
 			}else{
-				eenderman.func_195406_b(Block.getStateById(Block.getStateId(
-						eenderman.func_195405_dq()==null?Blocks.AIR.getDefaultState():eenderman.func_195405_dq()) > 0 ? 0 : carringid));
-
-				guibutton.displayString = button103[0];
+				entity.func_195406_b(Block.getStateById(Block.getStateId(
+						entity.getHeldBlockState()==null?Blocks.AIR.getDefaultState():entity.getHeldBlockState()) > 0 ? 0 : carringid));
+				button.setMessage(button103[0]);
 			}
-
 			break;
 
 		case 150:
 		case 151:
 		case 152:
-			bt150.displayString = String.format("%d", carringid);
-			if (Block.getStateId(eenderman.func_195405_dq()==null?Blocks.AIR.getDefaultState():eenderman.func_195405_dq()) > 0) {
-				eenderman.func_195406_b(Block.getStateById(carringid));
+			if (carringid < 0) {
+				bt150.setMessage("none");
+			}else {
+				BlockState blk = canpic.get(carringid);
+				entity.func_195406_b(blk);
+				bt150.setMessage(I18n.format(blk.getBlock().getTranslationKey()));
+
 			}
 			break;
 		}
+		super.actionPerformed(id, button);
 	}
-
 }

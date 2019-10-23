@@ -1,50 +1,36 @@
 package basashi.dools.gui;
 
 import basashi.dools.entity.EntityDool;
-import net.minecraft.client.gui.GuiButton;
-import net.minecraft.entity.monster.EntityGhast;
+import net.minecraft.client.gui.widget.button.Button;
+import net.minecraft.entity.monster.GhastEntity;
 
 public class GuiDoolPause_ghast extends GuiDoolPause {
 
-	private EntityGhast eg;
+	private GhastEntity entity;
 	private String button102[] = { "Charge", "Fire" };
-
-
-	public GuiDoolPause_ghast(EntityDool entityfigua) {
-		super(entityfigua);
-		eg = (EntityGhast) targetEntity.renderEntity;
+	public GuiDoolPause_ghast(EntityDool entityfigure) {
+		super(entityfigure);
+		entity = (GhastEntity) entityfigure.renderEntity;
 	}
 
-	public void initGui() {
-		super.initGui();
-
-		GuiButton b1 = new GuiButton(102, width / 2 - 140, height / 6 + 0 + 12, 80, 20,
-				button102[eg.isAttacking()? 0 : 1]) {
-    		@Override
-    		public void onClick(double mouseX, double moudeY){
-    			actionPerformed(this);
-    		}
-    	};
-    	buttons.add(b1);
-    	this.children.addAll(buttons);
+	@Override
+	public void init() {
+		super.init();
+		this.addButton(new Button(width / 2 - 140, height / 6 + 0 + 12, 80, 20, button102[entity.isAttacking()? 0 : 1], (bt)->{actionPerformed(102,bt);}));
 	}
 
-	protected void actionPerformed(GuiButton guibutton) {
-		super.actionPerformed(guibutton);
-
-		if (!guibutton.enabled) {
-			return;
-		}
-		switch (guibutton.id) {
+	@Override
+	protected void actionPerformed(int id, Button button) {
+		switch(id){
 		case 102:
-			if (eg.isAttacking()) {
-				eg.setAttacking(false);
+			if (entity.isAttacking()) {
+				entity.setAttacking(false);
 			} else {
-				eg.setAttacking(true);
+				entity.setAttacking(true);
 			}
-			guibutton.displayString = button102[eg.isAttacking()? 0 : 1];
+			button.setMessage(button102[entity.isAttacking()? 0 : 1]);
 			break;
 		}
+		super.actionPerformed(id, button);
 	}
-
 }

@@ -1,37 +1,36 @@
 package basashi.dools.container;
+
 import net.minecraft.block.Block;
-import net.minecraft.init.Blocks;
-import net.minecraft.init.Items;
-import net.minecraft.inventory.Container;
-import net.minecraft.inventory.EntityEquipmentSlot;
+import net.minecraft.block.SkullBlock;
+import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.inventory.IInventory;
-import net.minecraft.inventory.Slot;
+import net.minecraft.inventory.container.Container;
+import net.minecraft.inventory.container.Slot;
+import net.minecraft.item.ArmorItem;
 import net.minecraft.item.Item;
-import net.minecraft.item.ItemArmor;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 
 public class SlotArmorDool extends Slot {
 
 	protected final Container parent;
-	public EntityEquipmentSlot armorType;
+	public EquipmentSlotType armorType;
 
-	public SlotArmorDool(Container par1Container, IInventory par2IInventory, int par3, int par4, int par5, EntityEquipmentSlot armorType) {
-		super(par2IInventory, par3, par4, par5);
+	public SlotArmorDool(Container par1Container, IInventory inv, int index, int xPos, int yPos, EquipmentSlotType armorType) {
+		super(inv, index, xPos, yPos);
 		this.parent = par1Container;
 		this.armorType = armorType;
 	}
 
-	public boolean isItemValid(ItemStack par1ItemStack) {
-		if (par1ItemStack.isEmpty()) return false;
-		Item litem = par1ItemStack.getItem();
+	public boolean isItemValid(ItemStack stack) {
+		if (stack.isEmpty()) return false;
+		Item litem = stack.getItem();
 
-		//par1ItemStack.getItem().isValidArmor(par1ItemStack, armorType, ((ContainerItemSelect)parent).openPlayer);
-
-		if (litem instanceof ItemArmor) {
-			return ((ItemArmor)litem).getEquipmentSlot() == armorType;
+		if (litem instanceof ArmorItem) {
+			return ((ArmorItem)litem).getEquipmentSlot() == armorType;
 		}
-		if (Block.getBlockFromItem(litem) == Blocks.PUMPKIN || litem == Items.CREEPER_HEAD || litem == Items.DRAGON_HEAD || litem == Items.PLAYER_HEAD || litem==Items.ZOMBIE_HEAD) {
-			return armorType == EntityEquipmentSlot.HEAD;
+		if (litem == Items.PUMPKIN || Block.getBlockFromItem(litem) instanceof SkullBlock) {
+			return armorType == EquipmentSlotType.HEAD;
 		}
 		return false;
 	}

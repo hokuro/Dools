@@ -1,6 +1,3 @@
-/**
- *
- */
 package basashi.dools.network;
 
 import java.util.function.Supplier;
@@ -10,19 +7,15 @@ import basashi.dools.core.Dools;
 import basashi.dools.entity.EntityDool;
 import basashi.dools.server.ServerDool;
 import net.minecraft.entity.Entity;
-import net.minecraft.inventory.EntityEquipmentSlot;
+import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketBuffer;
-import net.minecraft.world.WorldServer;
+import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.fml.network.NetworkEvent;
 
-/**
- * @author as
- *
- */
 public class MessageItem {
 
-	private EntityEquipmentSlot slot;
+	private EquipmentSlotType slot;
 	private int slotIdx;
 	private int entityId;
 	private ItemStack item;
@@ -49,13 +42,11 @@ public class MessageItem {
 		return new MessageItem(slotId, entId, stack);
 	}
 
-	public static class Handler
-	{
-		public static void handle(final MessageItem pkt, Supplier<NetworkEvent.Context> ctx)
-		{
+	public static class Handler {
+		public static void handle(final MessageItem pkt, Supplier<NetworkEvent.Context> ctx) {
 			ctx.get().enqueueWork(() -> {
 				try{
-					WorldServer lworld = (WorldServer) ctx.get().getSender().world;
+					ServerWorld lworld = (ServerWorld) ctx.get().getSender().world;
 					Entity lentity = null;
 					EntityDool ldool = null;
 					ServerDool lserver = null;
@@ -65,9 +56,10 @@ public class MessageItem {
 						ldool = (EntityDool)lentity;
 						lserver = Dools.getServerFigure(ldool);
 					}
-					ldool.renderEntity.setItemStackToSlot(pkt.slot, pkt.item);
-					// クライアントへItemStackを送信
-					lserver.sendItem(pkt.slotIdx, ldool, false);
+					EquipmentSlotType slotIn = ContainerItemSelect.slotFromIndex.get(pkt.slotIdx);
+					ldool.renderEntity.setItemStackToSlot(slotIn, pkt.item);
+					// iクライアントへItemStackを送信
+					lserver.sendItem(pkt.slotIdx, ldool, false, ctx.get().getSender());
 				}catch(Exception ex){
 					ex.printStackTrace();
 				}

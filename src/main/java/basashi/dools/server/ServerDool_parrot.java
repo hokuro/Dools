@@ -5,20 +5,29 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import basashi.dools.entity.EntityDool;
-import net.minecraft.entity.passive.EntityParrot;
+import net.minecraft.entity.passive.ParrotEntity;
+import net.minecraft.nbt.CompoundNBT;
 
 public class ServerDool_parrot extends ServerDool {
 	@Override
-	public void sendData(EntityDool pFigure, DataOutput pData)
-			throws IOException {
-		EntityParrot lentity = (EntityParrot)pFigure.renderEntity;
+ 	public void sendData(EntityDool pFigure, DataOutput pData) throws IOException {
+		super.sendData(pFigure, pData);
+		ParrotEntity lentity = (ParrotEntity)pFigure.renderEntity;
 		pData.writeInt(lentity.getVariant());
 	}
 
 	@Override
-	public void reciveData(EntityDool pFigure, DataInput pData)
-			throws IOException {
-		EntityParrot lentity = (EntityParrot)pFigure.renderEntity;
+ 	public void reciveData(EntityDool pFigure, DataInput pData) throws IOException {
+		super.reciveData(pFigure, pData);
+		ParrotEntity lentity = (ParrotEntity)pFigure.renderEntity;
 		lentity.setVariant(pData.readInt());
+	}
+
+	@Override
+	public void readEntityFromNBT(EntityDool pFigure, CompoundNBT CompoundNBT) {
+	}
+
+	@Override
+	public void writeEntityToNBT(EntityDool pFigure, CompoundNBT CompoundNBT) {
 	}
 }

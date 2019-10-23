@@ -1,48 +1,39 @@
 package basashi.dools.gui;
 
 import basashi.dools.entity.EntityDool;
-import net.minecraft.client.gui.GuiButton;
-import net.minecraft.entity.monster.EntityCreeper;
+import net.minecraft.client.gui.widget.button.Button;
+import net.minecraft.entity.monster.CreeperEntity;
+import net.minecraft.nbt.CompoundNBT;
 
 public class GuiDoolPause_creeper extends GuiDoolPause {
-	public EntityCreeper entity;
 
-	public String[] button101 ={"powerd on","powerd off"};
+	public CreeperEntity entity;
 
+	public String[] button_power101 ={"powerd on","powerd off"};
 	public GuiDoolPause_creeper(EntityDool entityfigure) {
 		super(entityfigure);
-		entity = (EntityCreeper)entityfigure.renderEntity;
+		entity = (CreeperEntity)entityfigure.renderEntity;
 	}
 
 	@Override
-	public void initGui() {
-		super.initGui();
-
-		GuiButton b1 = new GuiButton(101, width / 2 - 140, height / 6 + 0 + 12, 80, 20, entity.getPowered() ? button101[1]:button101[0]) {
-    		@Override
-    		public void onClick(double mouseX, double moudeY){
-    			actionPerformed(this);
-    		}
-    	};
-    	buttons.add(b1);
-    	this.children.addAll(buttons);
+	public void init() {
+		super.init();
+		this.addButton(new Button(width / 2 - 140, height / 6 + 0 + 12, 80, 20, entity.getPowered() ? button_power101[1]:button_power101[0], (bt)->{actionPerformed(101, bt);}));
 	}
 
 	@Override
-	protected void actionPerformed(GuiButton guibutton) {
-		if (!guibutton.enabled) {
-			return;
-		}
-		switch (guibutton.id) {
+	protected void actionPerformed(int id, Button button) {
+		CompoundNBT nbt;
+		switch(id){
 		case 101:
-			if (!entity.getPowered()){
-				entity.onStruckByLightning(null);
-				guibutton.enabled = false;
-			}
-			guibutton.displayString =  entity.getPowered() ? button101[1]:button101[0];
+			boolean power = entity.getPowered();
+			nbt = new CompoundNBT();
+			entity.writeAdditional(nbt);
+			nbt.putBoolean("powered",!power);
+			entity.readAdditional(nbt);
+			button.setMessage( entity.getPowered() ? button_power101[1]:button_power101[0]);
 			break;
 		}
-
-		super.actionPerformed(guibutton);
+		super.actionPerformed(id, button);
 	}
 }

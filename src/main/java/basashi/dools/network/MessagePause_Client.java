@@ -17,21 +17,18 @@ public class MessagePause_Client {
 
 	private byte data[];
 
-	public MessagePause_Client(){}
 	public MessagePause_Client(byte[] pause){
 		data = pause;
 	}
 
-	public static void encode(MessagePause_Client pkt, PacketBuffer buf)
-	{
+	public static void encode(MessagePause_Client pkt, PacketBuffer buf) {
 		buf.writeInt(pkt.data.length);
 		for (int i = 0; i < pkt.data.length; i++) {
 			buf.writeByte(pkt.data[i]);
 		}
 	}
 
-	public static MessagePause_Client decode(PacketBuffer buf)
-	{
+	public static MessagePause_Client decode(PacketBuffer buf) {
 		int size = buf.readInt();
 		byte[] buffer = new byte[size];
 		for (int i = 0; i < buffer.length; i++) {
@@ -40,13 +37,11 @@ public class MessagePause_Client {
 		return new MessagePause_Client(buffer);
 	}
 
-	public static class Handler
-	{
-		public static void handle(final MessagePause_Client pkt, Supplier<NetworkEvent.Context> ctx)
-		{
+	public static class Handler {
+		public static void handle(final MessagePause_Client pkt, Supplier<NetworkEvent.Context> ctx) {
 			ctx.get().enqueueWork(() -> {
 				try{
-					// 独自パケットチャンネルの受信
+					// i独自パケットチャンネルの受信
 					World lworld = Minecraft.getInstance().world;
 					Entity lentity = null;
 					EntityDool lfigure = null;
@@ -59,7 +54,7 @@ public class MessagePause_Client {
 						lfigure = (EntityDool)lentity;
 						lserver = Dools.getServerFigure(lfigure);
 					}
-					// サーバーから姿勢制御データ等を受信
+					// iサーバーから姿勢制御データ等を受信
 					ModLog.log().debug("DataSet ID:"+lentity.getEntityId()+"(size:"+pkt.data.length+") Client.");
 					lserver.setData((EntityDool)lentity,pkt.data);
 				}catch(Exception ex){

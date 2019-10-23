@@ -1,15 +1,18 @@
 package basashi.dools.gui;
 
 import basashi.dools.entity.EntityDool;
-import net.minecraft.client.gui.GuiButton;
-import net.minecraft.entity.passive.EntityLlama;
-import net.minecraft.init.Blocks;
-import net.minecraft.item.EnumDyeColor;
+import net.minecraft.block.Blocks;
+import net.minecraft.client.gui.widget.button.Button;
+import net.minecraft.entity.passive.horse.AbstractHorseEntity;
+import net.minecraft.entity.passive.horse.LlamaEntity;
+import net.minecraft.inventory.IInventory;
+import net.minecraft.item.DyeColor;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 
 public class GuiDoolPause_llama extends GuiDoolPause {
-	public EntityLlama entity;
+	public LlamaEntity entity;
 	public static final ItemStack[] colors = {
 			ItemStack.EMPTY,
 			new ItemStack(Blocks.WHITE_CARPET),
@@ -33,55 +36,33 @@ public class GuiDoolPause_llama extends GuiDoolPause {
 	private int valiant = 0;
 	private int color = 0;
 
+
 	public GuiDoolPause_llama(EntityDool entityfigure) {
 		super(entityfigure);
-		entity = (EntityLlama)entityfigure.renderEntity;
+		entity = (LlamaEntity)entityfigure.renderEntity;
 	}
 
 	@Override
-	public void initGui() {
-		super.initGui();
-		GuiButton b1 = new GuiButton(101, width / 2 - 140, height / 6 + 0 + 12, 80, 20, entity.hasChest() ? button101[1]:button101[0]) {
-    		@Override
-    		public void onClick(double mouseX, double moudeY){
-    			actionPerformed(this);
-    		}
-    	};
-		GuiButton b2 = new GuiButton(102, width / 2 - 140, height / 6 + 0 + 12+20, 80, 20, "Color "+ entity.getVariant()){
-    		@Override
-    		public void onClick(double mouseX, double moudeY){
-    			actionPerformed(this);
-    		}
-    	};
+	public void init() {
+		super.init();
+		this.addButton(new Button(width / 2 - 140, height / 6 + 0 + 12, 80, 20, entity.hasChest() ? button101[1]:button101[0], (bt)->{actionPerformed(101, bt);}));
+    	this.addButton(new Button(width / 2 - 140, height / 6 + 0 + 12+20, 80, 20, "Color "+ entity.getVariant(), (bt)->{actionPerformed(102, bt);}));
 
-    	EnumDyeColor col = entity.getColor();
+    	DyeColor col = entity.getColor();
     	if (col == null) {
     		color = 0;
     	}else {
     		color = col.getId()+1;
     	}
-		GuiButton b3 = new GuiButton(103, width / 2 - 140, height / 6 + 0 + 12+40, 100, 20, color==0?"None":colors[color].getDisplayName().getFormattedText()) {
-    		@Override
-    		public void onClick(double mouseX, double moudeY){
-    			actionPerformed(this);
-    		}
-    	};
-
-    	buttons.add(b1);
-    	buttons.add(b2);
-    	buttons.add(b3);
-    	this.children.addAll(buttons);
+    	this.addButton(new Button(width / 2 - 140, height / 6 + 0 + 12+40, 100, 20, color==0?"None":colors[color].getDisplayName().getFormattedText(), (bt)->{actionPerformed(103, bt);}));
 	}
 
 	@Override
-	protected void actionPerformed(GuiButton guibutton) {
-		if (!guibutton.enabled) {
-			return;
-		}
-		switch (guibutton.id) {
+	protected void actionPerformed(int id, Button button) {
+		switch(id){
 		case 101:
 			entity.setChested(!entity.hasChest());
-			guibutton.displayString =  entity.hasChest() ? button101[1]:button101[0];
+			button.setMessage( entity.hasChest() ? button101[1]:button101[0]);
 			break;
 		case 102:
 			this.valiant++;
@@ -89,32 +70,33 @@ public class GuiDoolPause_llama extends GuiDoolPause {
 				valiant = 0;
 			}
 			entity.setVariant(valiant);
-			guibutton.displayString =  "Color "+ entity.getVariant();
+			button.setMessage("Color "+ entity.getVariant());
 			break;
 		case 103:
+
+			IInventory inv = (IInventory)ObfuscationReflectionHelper.getPrivateValue(AbstractHorseEntity.class, entity, "horseChest");
 			color++;
 			if (color >= colors.length){color = 0;}
 
-			NBTTagCompound compound = new NBTTagCompound();
+			CompoundNBT compound = new CompoundNBT();
 			entity.writeAdditional(compound);
 			if (color == 0) {
-				compound.removeTag("DecorItem");
+				compound.remove("DecorItem");
+				inv.setInventorySlotContents(1, ItemStack.EMPTY);
 			}else {
 				ItemStack stack = colors[color];
-				compound.setTag("DecorItem", stack.write(new NBTTagCompound()));
+				compound.put("DecorItem", stack.write(new CompoundNBT()));
 			}
 			entity.readAdditional(compound);
-			//entity.getDataManager().set((DataParameter<Integer>)Dools.getPrivateValue(EntityLlama.class, null, "DATA_COLOR_ID"),color-1);
 
-	    	EnumDyeColor col = entity.getColor();
+	    	DyeColor col = entity.getColor();
 	    	if (col == null) {
 	    		color = 0;
 	    	}else {
 	    		color = col.getId()+1;
 	    	}
-			guibutton.displayString = color==0?"None":colors[color].getDisplayName().getFormattedText();
+	    	button.setMessage(color==0?"None":colors[color].getDisplayName().getFormattedText());
 		}
-
-		super.actionPerformed(guibutton);
+		super.actionPerformed(id, button);
 	}
 }

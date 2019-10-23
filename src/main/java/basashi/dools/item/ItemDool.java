@@ -1,36 +1,39 @@
 package basashi.dools.item;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.TreeMap;
 
-import basashi.dools.core.Dools;
+import org.codehaus.plexus.util.StringUtils;
+
 import basashi.dools.core.log.ModLog;
 import basashi.dools.entity.EntityDool;
-import net.minecraft.client.renderer.model.ModelResourceLocation;
+import basashi.dools.gui.GuiDoolSelect;
+import net.minecraft.block.BlockState;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.EntityType;
-import net.minecraft.init.SoundEvents;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemUseContext;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.EnumActionResult;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.util.ActionResultType;
+import net.minecraft.util.Direction;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundCategory;
+import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.registry.IRegistry;
+import net.minecraft.util.registry.Registry;
+import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.World;
 
 public class ItemDool extends Item {
 	public static final String NAME="dool";
 	public static Map<String,Entity> entityStringMap = new TreeMap<String,Entity>();
-	public static EntityDool entDool;
 	public static ItemStack firstPerson;
 
 	public ItemDool(Item.Properties property){
@@ -38,101 +41,116 @@ public class ItemDool extends Item {
 	}
 
 	@Override
-    //public boolean onItemUse(ItemStack stack, EntityPlayer playerIn, World worldIn, BlockPos pos, EnumFacing side, float hitX, float hitY, float hitZ){
-	public EnumActionResult onItemUse(ItemUseContext context) {
-		ModLog.log().debug("start");
-		if (context.getWorld().isAirBlock(context.getPos().add(0, 1, 0)) || context.getHitZ() <= 0.5D){
-			double x, y, z;
-			if (context.getHitX() == 1){
-				x = context.getPos().getX() + context.getHitX();
-				y = context.getPos().getY() + context.getHitY();
-				z = context.getPos().getZ() + context.getHitZ();
-			}else{
-				x = context.getPos().getX() + 0.5D;
-				y = context.getPos().getY() + 1.0D;
-				z = context.getPos().getZ() + 0.5D;
-			}
-			ItemStack stack = context.getItem();
-			float lyaw = (180F - context.getPlayer().getRotationYawHead())%360F;
-			EntityLivingBase lelb = getEntityFromItemStack(stack, context.getWorld());
-			if(stack.getDamage()>0){
-				ModLog.log().debug("id "+stack.getDamage());
-				if(!context.getWorld().isRemote){
-					try{
-						EntityDool lc = new EntityDool(context.getWorld(),stack.getTag().getString("DoolName"));
-						lc.setPositionAndRotation(x,y,z,lyaw, 0F);
-						context.getWorld().spawnEntity(lc);
-						context.getWorld().playSound(context.getPlayer(), new BlockPos(context.getPlayer().posX,context.getPlayer().posY,context.getPlayer().posZ),
-								SoundEvents.BLOCK_STONE_PLACE, SoundCategory.BLOCKS ,0.5F, 0.4F / ((new Random()).nextFloat() * 0.4F + 0.8F));
-					}catch(Exception e){
-						e.printStackTrace();
-					}
-				}
-			}else{
-				ModLog.log().debug("id 0");
-				if (entDool == null) {
-		            entDool = Dools.getEntityMob(null);
-				}
-				entDool.setWorld(context.getWorld());
-				entDool.setPositionAndRotation(x,y,z,lyaw,0F);
-		        if (!context.getWorld().isRemote) {
-		        	Dools.proxy.openGuiSelect(context.getPlayer(), context.getWorld());
-		        }
-			}
-			stack.shrink(1);
+	public ActionResultType onItemUse(ItemUseContext context) {
+		World world = context.getWorld();
+		ItemStack itemstack = context.getItem();
+
+		BlockPos blockpos = context.getPos();
+		Direction direction = context.getFace();
+		BlockState blockstate = world.getBlockState(blockpos);
+
+		BlockPos blockpos1;
+		if (blockstate.getCollisionShape(world, blockpos).isEmpty()) {
+			blockpos1 = blockpos;
+		} else {
+			blockpos1 = blockpos.offset(direction);
 		}
-		ModLog.log().debug("end");
-		return EnumActionResult.FAIL;
+		float lyaw = (180F - context.getPlayer().getRotationYawHead())%360F;
+		String name = getLivingName(itemstack);
+
+		ModLog.log().debug("start: " + name);
+		if(!StringUtils.isEmpty(name)){
+			if (!world.isRemote) {
+				// i名前が登録済み
+				ModLog.log().debug("id " + name);
+				try{
+					// i登録済みのエンティティを召喚
+					EntityDool lc = new EntityDool(context.getWorld(), getLivingNBT(itemstack));
+					lc.setPositionAndRotation(blockpos1.getX(), blockpos1.getY(), blockpos1.getZ(), lyaw, 0.0F);
+					context.getWorld().addEntity(lc);
+					context.getWorld().playSound(context.getPlayer(), new BlockPos(context.getPlayer().posX,context.getPlayer().posY,context.getPlayer().posZ),
+							SoundEvents.BLOCK_STONE_PLACE, SoundCategory.BLOCKS ,0.5F, 0.4F / ((new Random()).nextFloat() * 0.4F + 0.8F));
+					itemstack.shrink(1);
+				}catch(Exception e){
+					e.printStackTrace();
+				}
+			}
+			return ActionResultType.SUCCESS;
+		} else {
+			if (world.isRemote) {
+				EntityDool lc = new EntityDool(world);
+				lc.setPositionAndRotation(blockpos1.getX(), blockpos1.getY(), blockpos1.getZ(), lyaw, 0.0F);
+				Minecraft.getInstance().displayGuiScreen(new GuiDoolSelect(lc, new TranslationTextComponent("select")));
+			} else {
+				itemstack.shrink(1);
+			}
+			ModLog.log().debug("end");
+			return ActionResultType.SUCCESS;
+		}
 	}
 
+	public static final String KEY_LIVINGNAME = "doolname";
+	public static final String KEY_LIVINGNBT = "doollivingnbt";
 
+	public static void setLivingName(ItemStack stack, String value) {
+		CompoundNBT compound = stack.getOrCreateTag();
+		compound.putString(KEY_LIVINGNAME, value);
+		stack.setTag(compound);
+	}
 
-	/**
-	 * ItemStackに関連付けられているEntityを返す。<br>
-	 * 対象となるEntityが存在しない場合はItemDamageを０に設定し適当なEntityを返す。
-	 * @param pItemStack
-	 * @return
-	 */
-	public static EntityLivingBase getEntityFromItemStack(ItemStack pItemStack, World world) {
-		if (pItemStack.hasTag()) {
-			if (pItemStack.getTag().hasKey("DoolName")) {
-				String ls = pItemStack.getTag().getString("DoolName");
-				EntityType et = EntityType.getById(ls);
-				if (et != null ) {
-					Entity le = et.create(world);
-					if (le instanceof EntityLivingBase) {
-						pItemStack.setDamage(le.getEntityId());
-						return (EntityLivingBase)le;
-					}
-				}
-			}
+	public static String getLivingName(ItemStack stack) {
+		String ret = "";
+		CompoundNBT compound  = stack.getOrCreateTag();
+		if (compound.contains(KEY_LIVINGNAME)) {
+			ret = compound.getString(KEY_LIVINGNAME);
 		}
+		return ret;
+	}
 
-		pItemStack.setDamage(0);
-		return EntityType.ZOMBIE.create(world);
+	public static void setLivingNBT(ItemStack stack, LivingEntity entity) {
+		CompoundNBT compound = stack.getOrCreateTag();
+		CompoundNBT entityNBT = entity.writeWithoutTypeId(new CompoundNBT());
+		entity.writeAdditional(entityNBT);
+		compound.put(KEY_LIVINGNBT, entityNBT);
+		stack.setTag(compound);
+	}
+
+	public static LivingEntity getLivingNBT(ItemStack stack) {
+		String name = getLivingName(stack);
+		Entity ent;
+		if (StringUtils.isEmpty(name)) {
+			ent = EntityType.ZOMBIE.create(Minecraft.getInstance().world);
+		} else {
+			ent = Registry.ENTITY_TYPE.getOrDefault(new ResourceLocation(name)).create(Minecraft.getInstance().world);
+		}
+		if (ent instanceof LivingEntity) {
+			return getLivingNBT(stack, (LivingEntity)ent);
+		}
+		return null;
+	}
+
+	public static LivingEntity getLivingNBT(ItemStack stack, LivingEntity living) {
+		CompoundNBT compound = stack.getOrCreateTag();
+		if (compound.contains(KEY_LIVINGNBT)) {
+			CompoundNBT entityNBT = (CompoundNBT)compound.get(KEY_LIVINGNBT);
+			living.read(entityNBT);
+			living.readAdditional(entityNBT);
+		}
+		return living;
 	}
 
 	@Override
 	public void fillItemGroup(ItemGroup tab, NonNullList<ItemStack> subItems){
 		if (tab != this.getGroup()){return;}
 	  	// Creativeタブに追加するアイテム
-		subItems.add(new ItemStack(Dools.itemdool, 1));
+		subItems.add(new ItemStack(this, 1));
 
-		List<ModelResourceLocation> resource = new ArrayList<ModelResourceLocation>();
-		IRegistry.field_212629_r.forEach((etype)->{
-			Class cls = etype.getEntityClass();
-			boolean lp = true;
-			while(lp) {
-				if (cls == EntityLivingBase.class) {
-					ItemStack stack = new ItemStack(Dools.itemdool,1);
-					NBTTagCompound nbt = stack.getOrCreateTag();
-					nbt.setString("DoolName", EntityType.getId(etype).toString());
-					subItems.add(stack);
-					lp = false;
-				}else if (cls == Entity.class || cls == null) {
-					lp = false;
-				}
-				cls = cls.getSuperclass();
+		Registry.ENTITY_TYPE.forEach((etype)->{
+			Entity cls = etype.create(Minecraft.getInstance().world);
+			if (cls instanceof LivingEntity) {
+				ItemStack stack = new ItemStack(this,1);
+				setLivingName(stack, etype.getRegistryName().toString());
+				subItems.add(stack);
 			}
 		});
 	}
@@ -144,9 +162,9 @@ public class ItemDool extends Item {
 
 	@Override
 	public String getTranslationKey(ItemStack stack) {
-		if (stack.hasTag() && stack.getTag().hasKey("DoolName")) {
-			String name = stack.getTag().getString("DoolName");
-			return "Dool_"+ new ResourceLocation(name).getPath();
+		String name = getLivingName(stack);
+		if (!StringUtils.isEmpty(name)){
+			return "Dool_"+ I18n.format(Registry.ENTITY_TYPE.getOrDefault(new ResourceLocation(name)).getTranslationKey());
 		}
 		return getDefaultTranslationKey();
 	}

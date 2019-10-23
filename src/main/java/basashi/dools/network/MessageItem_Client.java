@@ -8,7 +8,7 @@ import basashi.dools.entity.EntityDool;
 import basashi.dools.server.ServerDool;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
-import net.minecraft.inventory.EntityEquipmentSlot;
+import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.world.World;
@@ -18,7 +18,7 @@ public class MessageItem_Client {
 	private int slotIdx;
 	private int entityId;
 	private ItemStack item;
-	private EntityEquipmentSlot slot;
+	private EquipmentSlotType slot;
 
 	public MessageItem_Client(int sltId, int entId, ItemStack stack) {
 		slotIdx = sltId;
@@ -27,15 +27,13 @@ public class MessageItem_Client {
 		this.slot = ContainerItemSelect.slotFromIndex.get(slotIdx);
 	}
 
-	public static void encode(MessageItem_Client pkt, PacketBuffer buf)
-	{
+	public static void encode(MessageItem_Client pkt, PacketBuffer buf) {
 		buf.writeInt(pkt.slotIdx);
 		buf.writeInt(pkt.entityId);
 		buf.writeItemStack(pkt.item);
 	}
 
-	public static MessageItem_Client decode(PacketBuffer buf)
-	{
+	public static MessageItem_Client decode(PacketBuffer buf) {
 		int lslotid3 = 0;
 		ItemStack lis3 = ItemStack.EMPTY;
 		try {
@@ -49,10 +47,8 @@ public class MessageItem_Client {
 		return null;
 	}
 
-	public static class Handler
-	{
-		public static void handle(final MessageItem_Client pkt, Supplier<NetworkEvent.Context> ctx)
-		{
+	public static class Handler {
+		public static void handle(final MessageItem_Client pkt, Supplier<NetworkEvent.Context> ctx) {
 			ctx.get().enqueueWork(() -> {
 				try{
 					World lworld = Minecraft.getInstance().world;
@@ -65,7 +61,8 @@ public class MessageItem_Client {
 						ldool = (EntityDool)lentity;
 						lserver = Dools.getServerFigure(ldool);
 					}
-					lserver.reciveItem(ldool, pkt.slot,pkt.item);
+					EquipmentSlotType slotIn = ContainerItemSelect.slotFromIndex.get(pkt.slotIdx);
+					lserver.reciveItem(ldool, slotIn, pkt.item);
 				}catch(Exception ex){
 					ex.printStackTrace();
 				}

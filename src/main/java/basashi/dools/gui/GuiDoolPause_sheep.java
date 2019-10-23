@@ -1,78 +1,53 @@
 package basashi.dools.gui;
 
 import basashi.dools.entity.EntityDool;
-import net.minecraft.client.gui.GuiButton;
-import net.minecraft.entity.passive.EntitySheep;
-import net.minecraft.item.EnumDyeColor;
-import net.minecraft.util.text.TextComponentTranslation;
+import net.minecraft.client.gui.widget.button.Button;
+import net.minecraft.entity.passive.SheepEntity;
+import net.minecraft.item.DyeColor;
+import net.minecraft.util.text.TranslationTextComponent;
 
 public class GuiDoolPause_sheep extends GuiDoolPause {
-
 	public static final String customname = "jeb_";
-	private EntitySheep es;
+	private SheepEntity entity;
 	private String button102[] = { "Fullfrontal", "Sheared" };
 
-
-	public GuiDoolPause_sheep(EntityDool entityfigua) {
-		super(entityfigua);
-		es = (EntitySheep) targetEntity.renderEntity;
+	public GuiDoolPause_sheep(EntityDool entityfigure) {
+		super(entityfigure);
+		entity = (SheepEntity) targetEntity.renderEntity;
 	}
 
-	public void initGui() {
-		super.initGui();
-		GuiButton b1 = new GuiButton(102, width / 2 - 140, height / 6 + 0 + 12, 80, 20, button102[es.getSheared() ? 0 : 1]) {
-    		@Override
-    		public void onClick(double mouseX, double moudeY){
-    			actionPerformed(this);
-    		}
-    	};
-    	GuiButton b2 = new GuiButton(103, width / 2 - 140, height / 6 + 24 + 12, 80, 20, es.getFleeceColor().name()) {
-    		@Override
-    		public void onClick(double mouseX, double moudeY){
-    			actionPerformed(this);
-    		}
-    	};
-    	GuiButton b3 = new GuiButton(104, width / 2 - 140, height / 6 + 48 + 12, 80, 20, es.hasCustomName()?"None":customname) {
-    		@Override
-    		public void onClick(double mouseX, double moudeY){
-    			actionPerformed(this);
-    		}
-    	};
-
-    	buttons.add(b1);
-    	buttons.add(b2);
-    	buttons.add(b3);
-    	this.children.addAll(buttons);
+	@Override
+	public void init() {
+		super.init();
+		this.addButton(new Button(width / 2 - 140, height / 6 + 0 + 12, 80, 20, button102[entity.getSheared() ? 0 : 1], (bt)->{actionPerformed(102, bt);}));
+		this.addButton(new Button(width / 2 - 140, height / 6 + 24 + 12, 80, 20, entity.getFleeceColor().name(), (bt)->{actionPerformed(103, bt);}));
+		this.addButton(new Button(width / 2 - 140, height / 6 + 48 + 12, 80, 20, entity.hasCustomName()?"None":customname, (bt)->{actionPerformed(104, bt);}));
 	}
 
-	protected void actionPerformed(GuiButton guibutton) {
-		super.actionPerformed(guibutton);
-
-		if (!guibutton.enabled) {
-			return;
-		}
-		switch (guibutton.id) {
+	@Override
+	protected void actionPerformed(int id, Button button) {
+		switch(id){
 		case 102:
-			es.setSheared(!es.getSheared());
-			guibutton.displayString = button102[es.getSheared() ? 0 : 1];
+			entity.setSheared(!entity.getSheared());
+			button.setMessage(button102[entity.getSheared() ? 0 : 1]);
 			break;
 
 		case 103:
-			if (es.getFleeceColor().ordinal() == 15) {
-				es.setFleeceColor(EnumDyeColor.values()[0]);
+			if (entity.getFleeceColor().ordinal() == 15) {
+				entity.setFleeceColor(DyeColor.values()[0]);
 			} else {
-				es.setFleeceColor(EnumDyeColor.values()[es.getFleeceColor().ordinal() + 1]);
+				entity.setFleeceColor(DyeColor.values()[entity.getFleeceColor().ordinal() + 1]);
 			}
-			guibutton.displayString = es.getFleeceColor().name();
+			button.setMessage(entity.getFleeceColor().name());
 			break;
 		case 104:
-			if (es.hasCustomName()){
-				es.setCustomName(new TextComponentTranslation(""));
+			if (entity.hasCustomName()){
+				entity.setCustomName(null);
 			}else{
-				es.setCustomName(new TextComponentTranslation(customname));
+				entity.setCustomName(new TranslationTextComponent(customname));
 			}
-			guibutton.displayString = es.hasCustomName()?"None":customname;
+			button.setMessage(entity.hasCustomName()?"None":customname);
 		}
+		super.actionPerformed(id, button);
 	}
-
 }

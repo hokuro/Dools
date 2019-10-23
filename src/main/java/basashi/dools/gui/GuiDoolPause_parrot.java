@@ -1,49 +1,36 @@
 package basashi.dools.gui;
 
 import basashi.dools.entity.EntityDool;
-import net.minecraft.client.gui.GuiButton;
-import net.minecraft.entity.passive.EntityParrot;
+import net.minecraft.client.gui.widget.button.Button;
+import net.minecraft.entity.passive.ParrotEntity;
 
 public class GuiDoolPause_parrot extends GuiDoolPause {
-	public EntityParrot entity;
-
+	public ParrotEntity entity;
 	private int variant = 0;
 
 	public GuiDoolPause_parrot(EntityDool entityfigure) {
 		super(entityfigure);
-		entity = (EntityParrot)entityfigure.renderEntity;
+		entity = (ParrotEntity)entityfigure.renderEntity;
 	}
 
 	@Override
-	public void initGui() {
-		super.initGui();
-
-		GuiButton b1 = new GuiButton(101, width / 2 - 140, height / 6 + 0 + 12, 80, 20, "Parrot "+variant) {
-    		@Override
-    		public void onClick(double mouseX, double moudeY){
-    			actionPerformed(this);
-    		}
-    	};
-    	buttons.add(b1);
-    	this.children.addAll(buttons);
+	public void init() {
+		super.init();
+		this.addButton(new Button(width / 2 - 140, height / 6 + 0 + 12, 80, 20, "Parrot "+variant, (bt)->{actionPerformed(101, bt);}));
 	}
 
 	@Override
-	protected void actionPerformed(GuiButton guibutton) {
-		if (!guibutton.enabled) {
-			return;
-		}
-		switch (guibutton.id) {
+	protected void actionPerformed(int id, Button button) {
+		switch (id) {
 		case 101:
 			variant++;
 			if (variant > 4){
 				variant = 0;
 			}
 			entity.setVariant(variant);
-			guibutton.displayString =  "Parrot "+variant;
+			button.setMessage( "Parrot "+variant);
 			break;
 		}
-
-		super.actionPerformed(guibutton);
+		super.actionPerformed(id, button);
 	}
 }

@@ -8,33 +8,32 @@ import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
+import basashi.dools.container.ContainerItemSelect;
 import basashi.dools.entity.EntityDool;
 import basashi.dools.network.MessageHandler;
-import net.minecraft.entity.EntityAgeable;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.inventory.EntityEquipmentSlot;
+import net.minecraft.entity.AgeableEntity;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.monster.ZombieEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 
-/**
- * �T�[�o�[���̎�M�����B GUI���쐬�����ۂ͂��������邱�ƁB
- */
 public class ServerDool {
 
 	public byte[] getData(EntityDool pFigure) {
 		try {
 			ByteArrayOutputStream lba = new ByteArrayOutputStream();
 			DataOutputStream lds = new DataOutputStream(lba);
-			EntityLivingBase lentity = pFigure.renderEntity;
+			LivingEntity lentity = pFigure.renderEntity;
 			lds.writeInt(pFigure.getEntityId());		// ID
 			lds.writeByte(0); // UpdateCount			// UpdateCount
 			lds.writeFloat(pFigure.additionalYaw);		// Yaw
 			lds.writeFloat(pFigure.zoom);				// zoom
-			int lf = (pFigure.isFigureRide ? 1 : 0) |
-					(lentity.isSneaking() ? 2 : 0) |
-					(lentity.isChild() ? 4 : 0);
-			lds.writeByte(lf); 							// Flags
+			lds.writeBoolean(pFigure.isMove);			// move
+			lds.writeBoolean(pFigure.isFigureRide);		// ride
+			lds.writeBoolean(lentity.isSneaking());
+			lds.writeBoolean(lentity.isChild());
 			lds.writeFloat(lentity.rotationYaw);		// Yaw
 			lds.writeFloat(lentity.rotationPitch);		// Piti
 			lds.writeFloat(pFigure.fyOffset);			// yoffset
@@ -51,29 +50,31 @@ public class ServerDool {
 			try {
 				ByteArrayInputStream lba = new ByteArrayInputStream(pData);
 				DataInputStream lds = new DataInputStream(lba);
-				EntityLivingBase lel = pFigure.renderEntity;
+				LivingEntity lel = pFigure.renderEntity;
 				lds.readInt();									// EntityID
 				lds.readByte();									// UpdateCount
 				pFigure.additionalYaw = lds.readFloat();		// Yaw
 				pFigure.zoom = lds.readFloat();					// zoom
 				pFigure.setZoom(pFigure.zoom);
-				int lf = lds.readByte(); 						// Flags
-				pFigure.isFigureRide = (lf & 1) != 0;
+				pFigure.isMove = lds.readBoolean();				// move
+				pFigure.isFigureRide = lds.readBoolean(); 		// ride
 				if (pFigure.world.isRemote) {
 					// Client
 					if (pFigure.isFigureRide){
 						lel.startRiding(pFigure);
-
 					}else{
 						lel.stopRiding();
 					}
-					//lel.ridingEntity = pFigure.isFigureRide ? pFigure : null;
 				} else {
 					// Seerver
 				}
-				lel.setSneaking((lf & 2) != 0);
-				if (lel instanceof EntityAgeable) {
-					((EntityAgeable)lel).setGrowingAge(-(lf & 4));
+
+				lel.setSneaking(lds.readBoolean());				//sneak
+				boolean isChild = lds.readBoolean();
+				if (lel instanceof AgeableEntity) {
+					((AgeableEntity)lel).setGrowingAge(isChild?-1:1);		// child
+				}else if (lel instanceof ZombieEntity) {
+					((ZombieEntity)lel).setChild(isChild);
 				}
 				lel.rotationYaw = lel.prevRotationYaw =
 						lel.rotationYawHead = lel.prevRotationYawHead = lds.readFloat();	// RotationYaw
@@ -86,22 +87,13 @@ public class ServerDool {
 		}
 	}
 
-	public void sendItem(int pIndex, EntityDool pdool, boolean pClient) {
-		this.sendItem(pIndex, pdool, pClient, null);
-	}
-
-	public void sendItem(int pIndex, EntityDool pdool, boolean pClient, EntityPlayerMP player) {
+	public void sendItem(int pIndex, EntityDool pdool, boolean pClient, ServerPlayerEntity player) {
 		try {
-			//MessageItem mitem = new MessageItem(pIndex, pdool);
 			if (pClient){
-				MessageHandler.Send_MessageItem(pIndex, pdool);
-				//Dools.INSTANCE.sendToServer(mitem);
+				MessageHandler.Send_MessageItem(pIndex, pdool.getEntityId(), pdool.renderEntity.getItemStackFromSlot(ContainerItemSelect.slotFromIndex.get(pIndex)));
 			}else{
 				if (player != null) {
-					MessageHandler.Send_MessageItem_Client(pIndex,pdool,player);
-					//Dools.INSTANCE.sendToAll(new MessageItem_Client(pIndex,pdool));
-				}else {
-					MessageHandler.Send_MessageItem_Client(pIndex,pdool);
+					MessageHandler.Send_MessageItem_Client(pIndex, pdool.getEntityId(), pdool.renderEntity.getItemStackFromSlot(ContainerItemSelect.slotFromIndex.get(pIndex)),player);
 				}
 			}
 		} catch (Exception e) {
@@ -109,9 +101,8 @@ public class ServerDool {
 		}
 	}
 
-	public void reciveItem(EntityDool pFigure, EntityEquipmentSlot slotidx, ItemStack item) {
+	public void reciveItem(EntityDool pFigure, EquipmentSlotType slotidx, ItemStack item) {
 		pFigure.renderEntity.setItemStackToSlot(slotidx, item);
-		//pFigure.renderEntity.setCurrentItemOrArmor(lslotid3, lis3);
 	}
 
 	/**
@@ -129,12 +120,12 @@ public class ServerDool {
 	/**
 	 * 特殊なデータ読み込みを実行
 	 */
-	public void readEntityFromNBT(EntityDool pFigure, NBTTagCompound nbttagcompound) {}
+	public void readEntityFromNBT(EntityDool pFigure, CompoundNBT CompoundNBT) {}
 
 	/**
 	 * 特殊なデータ書き込みを実行
 	 */
-	public void writeEntityToNBT(EntityDool pFigure, NBTTagCompound nbttagcompound) {}
+	public void writeEntityToNBT(EntityDool pFigure, CompoundNBT CompoundNBT) {}
 
 	/**
 	 * 姿勢制御用
@@ -144,13 +135,13 @@ public class ServerDool {
 	/**
 	 * サーバーへ設定されたアイテムを送信。
 	 */
-	public void sendItems(EntityDool pdool, boolean pClient) {
-		sendItem(5, pdool, pClient);
-		sendItem(4, pdool, pClient);
-		sendItem(3, pdool, pClient);
-		sendItem(2, pdool, pClient);
-		sendItem(1, pdool, pClient);
-		sendItem(0, pdool, pClient);
+	public void sendItems(EntityDool pdool, boolean pClient, ServerPlayerEntity player) {
+		sendItem(5, pdool, pClient, player);
+		sendItem(4, pdool, pClient, player);
+		sendItem(3, pdool, pClient, player);
+		sendItem(2, pdool, pClient, player);
+		sendItem(1, pdool, pClient, player);
+		sendItem(0, pdool, pClient, player);
 	}
 
 }

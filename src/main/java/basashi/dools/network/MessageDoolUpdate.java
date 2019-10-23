@@ -7,35 +7,29 @@ import basashi.dools.entity.EntityDool;
 import basashi.dools.server.ServerDool;
 import net.minecraft.entity.Entity;
 import net.minecraft.network.PacketBuffer;
-import net.minecraft.world.WorldServer;
+import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.fml.network.NetworkEvent;
 
 public class MessageDoolUpdate {
 	private int entityId;
 
-	public MessageDoolUpdate(){}
-
 	public MessageDoolUpdate(int entityId){
 		this.entityId = entityId;
 	}
 
-	public static void encode(MessageDoolUpdate pkt, PacketBuffer buf)
-	{
+	public static void encode(MessageDoolUpdate pkt, PacketBuffer buf) {
 		buf.writeInt(pkt.entityId);
 	}
 
-	public static MessageDoolUpdate decode(PacketBuffer buf)
-	{
+	public static MessageDoolUpdate decode(PacketBuffer buf) {
 		return new MessageDoolUpdate(buf.readInt());
 	}
 
-	public static class Handler
-	{
-		public static void handle(final MessageDoolUpdate pkt, Supplier<NetworkEvent.Context> ctx)
-		{
+	public static class Handler {
+		public static void handle(final MessageDoolUpdate pkt, Supplier<NetworkEvent.Context> ctx) {
 			ctx.get().enqueueWork(() -> {
 				try{
-					WorldServer lworld = (WorldServer) ctx.get().getSender().world;
+					ServerWorld lworld = (ServerWorld) ctx.get().getSender().world;
 					Entity lentity = null;
 					EntityDool ldool = null;
 					ServerDool lserver = null;
@@ -47,10 +41,9 @@ public class MessageDoolUpdate {
 						lserver = Dools.getServerFigure(ldool);
 					}
 
-					// クライアントから姿勢制御データ要求を受信
+					// iクライアントから姿勢制御データ要求を受信
 					MessageHandler.Send_MessagePause_Client(ctx.get().getSender(), lserver.getData(ldool));
-					//Dools.INSTANCE.sendToAll(new MessagePause_Client(lserver.getData(ldool)));
-					lserver.sendItems(ldool, false);
+					lserver.sendItems(ldool, false, ctx.get().getSender());
 				}catch(Exception e){
 					e.printStackTrace();
 				}

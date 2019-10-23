@@ -8,20 +8,19 @@ import basashi.dools.core.log.ModLog;
 import basashi.dools.entity.EntityDool;
 import basashi.dools.server.ServerDool;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.item.EntityItem;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.init.SoundEvents;
+import net.minecraft.entity.item.ItemEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundCategory;
+import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.registry.IRegistry;
-import net.minecraft.world.WorldServer;
+import net.minecraft.util.registry.Registry;
+import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.fml.network.NetworkEvent;
 
-public class MessageServer_SpawnDool{
+public class MessageServer_SpawnDool {
 
 	private double x;
 	private double y;
@@ -37,8 +36,7 @@ public class MessageServer_SpawnDool{
 		this.mobString = mob;
 	}
 
-	public static void encode(MessageServer_SpawnDool pkt, PacketBuffer buf)
-	{
+	public static void encode(MessageServer_SpawnDool pkt, PacketBuffer buf) {
 		buf.writeInt(pkt.mobString.length());
 		buf.writeDouble(pkt.x);
 		buf.writeDouble(pkt.y);
@@ -47,8 +45,7 @@ public class MessageServer_SpawnDool{
 		buf.writeString(pkt.mobString);
 	}
 
-	public static MessageServer_SpawnDool decode(PacketBuffer buf)
-	{
+	public static MessageServer_SpawnDool decode(PacketBuffer buf) {
 		int len = buf.readInt();
 		return new MessageServer_SpawnDool(
 				buf.readDouble(),
@@ -59,13 +56,11 @@ public class MessageServer_SpawnDool{
 				);
 	}
 
-	public static class Handler
-	{
-		public static void handle(final MessageServer_SpawnDool pkt, Supplier<NetworkEvent.Context> ctx)
-		{
+	public static class Handler {
+		public static void handle(final MessageServer_SpawnDool pkt, Supplier<NetworkEvent.Context> ctx) {
 			ctx.get().enqueueWork(() -> {
 				try{
-					WorldServer lworld = (WorldServer) ctx.get().getSender().world;
+					ServerWorld lworld = (ServerWorld) ctx.get().getSender().world;
 					Entity lentity = null;
 					EntityDool ldool = null;
 					ServerDool lserver = null;
@@ -75,24 +70,21 @@ public class MessageServer_SpawnDool{
 					double lz = pkt.z;
 					float lyaw = pkt.yaw;
 					if (pkt.mobString =="") {
-						// 未選択でGUI閉じたのでアイテムをドロップ
-						EntityItem leitem = new EntityItem(lworld, lx, ly + 0.25D, lz, new ItemStack(Dools.itemdool));
+						// i未選択でGUI閉じたのでアイテムをドロップ
+						ItemEntity leitem = new ItemEntity(lworld, lx, ly + 0.25D, lz, new ItemStack(Dools.item_dool));
 						leitem.setDefaultPickupDelay();
-						lworld.spawnEntity(leitem);
+						lworld.addEntity(leitem);
 						ModLog.log().debug("SpawnItem:" +lx+"," +ly+"," +lz+ "Server.");
 					} else {
-						// 指定値にフィギュアをスポーン
+						// i指定値にフィギュアをスポーン
 						String lname = pkt.mobString;
 						try {
-							ldool = Dools.getEntityMob(lworld);
-							//lentity = EntityList.createEntityByIDFromName(new ResourceLocation(lname), lworld);
-							lentity = IRegistry.field_212629_r.func_212608_b(new ResourceLocation(lname)).create(lworld);
-							ldool.setRenderEntity((EntityLivingBase)lentity);
+							lentity = Registry.ENTITY_TYPE.getOrDefault(new ResourceLocation(lname)).create(lworld);
+							ldool = new EntityDool(lworld, lentity);
 							ldool.setPositionAndRotation(lx, ly, lz, lyaw, 0F);
-							lworld.spawnEntity(ldool);
-							EntityPlayer pl = ctx.get().getSender();
+							lworld.addEntity(ldool);
+							PlayerEntity pl = ctx.get().getSender();
 							lworld.playSound(pl, new BlockPos(pl.posX,pl.posY,pl.posZ), SoundEvents.BLOCK_STONE_PLACE, SoundCategory.BLOCKS ,0.5F, 0.4F / ((new Random()).nextFloat() * 0.4F + 0.8F));
-							//lworld.playSoundAtEntity(ctx.getServerHandler().playerEntity, "step.wood",0.5F, 0.4F / ((new Random()).nextFloat() * 0.4F + 0.8F));
 							ModLog.log().debug("SpawnFigure: "+lname+", "+lx+", "+ly+", "+lz+" Server.");
 						} catch (Exception e) {
 							ModLog.log().debug("SpawnFigure: failed.");
